@@ -27,21 +27,29 @@ type HTMLTemplateService interface {
 	Save(ctx context.Context, name string, file *multipart.File) (string, error)
 	// Remove removes html template from db.
 	Remove(ctx context.Context, id string) error
-	// GetParsed returns parsed html template by id.
-	GetParsed(ctx context.Context, id string) (*template.Template, error)
+	// GetRaw returns raw html template by id.
+	GetRaw(ctx context.Context, id string) (string, error)
 	// List returns list of html template metadata with pagination.
 	List(ctx context.Context, limit, offset int) ([]domain.HTMLTemplateMetadata, error)
+	// GetParsed returns parsed html template by id.
+	GetParsed(ctx context.Context, id string) (*template.Template, error)
 }
 
 type htmlTemplateService struct {
-	repo  repository.HTMLTemplateRepository
-	cache *shkvcache.Cache[*template.Template]
+	repo        repository.HTMLTemplateRepository
+	parsedCache *shkvcache.Cache[*template.Template]
+	rawCache    *shkvcache.Cache[string]
 }
 
-func NewHTMLTemplateService(repo repository.HTMLTemplateRepository, cache *shkvcache.Cache[*template.Template]) HTMLTemplateService {
+func NewHTMLTemplateService(
+	repo repository.HTMLTemplateRepository,
+	parsedCache *shkvcache.Cache[*template.Template],
+	rawCache *shkvcache.Cache[string],
+) HTMLTemplateService {
 	return &htmlTemplateService{
-		repo:  repo,
-		cache: cache,
+		repo:        repo,
+		parsedCache: parsedCache,
+		rawCache:    rawCache,
 	}
 }
 
@@ -73,12 +81,12 @@ func (s *htmlTemplateService) Save(ctx context.Context, name string, file *multi
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	key := "template:" + id
 	parsedTmpl, err := template.New(id).Parse(tmpl.Content)
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
-	s.cache.Set(key, parsedTmpl, 30)
+	s.parsedCache.Set(id, parsedTmpl, 60)
+	s.rawCache.Set(id, tmpl.Content, 60)
 
 	return id, nil
 }
@@ -89,33 +97,29 @@ func (s *htmlTemplateService) Remove(ctx context.Context, id string) error {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	key := "template:" + id
-	s.cache.Del(key)
+	s.parsedCache.Del(id)
+	s.rawCache.Del(id)
 
 	return nil
 }
 
-func (s *htmlTemplateService) GetParsed(ctx context.Context, id string) (*template.Template, error) {
-	op := "HTMLTemplateService.GetParsedById"
-	key := "template:" + id
+func (s *htmlTemplateService) GetRaw(ctx context.Context, id string) (string, error) {
+	op := "HTMLTemplateService.GetRaw"
 
-	if tmpl, ok := s.cache.Get(key); ok {
-		return tmpl, nil
+	if raw, ok := s.rawCache.Get(id); ok {
+		return raw, nil
 	}
 
 	tmpl, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNoTemplate) {
-			return nil, fmt.Errorf("%s: %w", op, ErrTemplateNotFound)
+			return "", fmt.Errorf("%s: %w", op, ErrTemplateNotFound)
 		}
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return "", fmt.Errorf("%s: %w", op, err)
 	}
-	parsedTmpl, err := template.New(id).Parse(tmpl.Content)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-	s.cache.Set(key, parsedTmpl, 30)
-	return parsedTmpl, nil
+	s.rawCache.Set(id, tmpl.Content, 60)
+
+	return tmpl.Content, nil
 }
 
 func (s *htmlTemplateService) List(ctx context.Context, limit, offset int) ([]domain.HTMLTemplateMetadata, error) {
@@ -136,3 +140,24 @@ func (s *htmlTemplateService) List(ctx context.Context, limit, offset int) ([]do
 	return templates, nil
 }
 
+func (s *htmlTemplateService) GetParsed(ctx context.Context, id string) (*template.Template, error) {
+	op := "HTMLTemplateService.GetParsedById"
+
+	if tmpl, ok := s.parsedCache.Get(id); ok {
+		return tmpl, nil
+	}
+
+	tmpl, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNoTemplate) {
+			return nil, fmt.Errorf("%s: %w", op, ErrTemplateNotFound)
+		}
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	parsedTmpl, err := template.New(id).Parse(tmpl.Content)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	s.parsedCache.Set(id, parsedTmpl, 60)
+	return parsedTmpl, nil
+}

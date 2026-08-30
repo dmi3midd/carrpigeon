@@ -8,13 +8,13 @@ import (
 	"carrpigeo/internal/server"
 	"carrpigeo/internal/service"
 	"context"
+	"html/template"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"html/template"
 
 	"github.com/dmi3midd/shkvcache"
 )
@@ -43,19 +43,25 @@ func main() {
 	defer db.Close()
 
 	// Cache
-	cache, err := shkvcache.NewCache[*template.Template](ctx, &shkvcache.Options{})
+	parsedTmplCache, err := shkvcache.NewCache[*template.Template](ctx, &shkvcache.Options{})
 	if err != nil {
-		slog.Error("failed to initialize cache", "error", err)
+		slog.Error("failed to initialize parsed template cache", "error", err)
 		os.Exit(1)
 	}
-	defer cache.Close()
+	defer parsedTmplCache.Close()
+	rawTmplCache, err := shkvcache.NewCache[string](ctx, &shkvcache.Options{})
+	if err != nil {
+		slog.Error("failed to initialize raw template cache", "error", err)
+		os.Exit(1)
+	}
+	defer rawTmplCache.Close()
 
 	// Repositories
 	htmlTemplateRepository := repository.NewHTMLTemplateRepository(db.GetDB())
 	emailRepository := repository.NewEmailRepository(db.GetDB())
 
 	// Services
-	htmlTemplateService := service.NewHTMLTemplateService(htmlTemplateRepository, cache)
+	htmlTemplateService := service.NewHTMLTemplateService(htmlTemplateRepository, parsedTmplCache, rawTmplCache)
 	emailClient := service.NewEmailClient(&cfg.SMTP)
 	emailService := service.NewEmailService(emailClient, emailRepository, htmlTemplateService, &cfg.SMTP)
 

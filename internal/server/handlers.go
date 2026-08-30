@@ -34,36 +34,21 @@ func (s *Server) SendEmailHandler(w http.ResponseWriter, r *http.Request) error 
 	return nil
 }
 
-type CreateHTMLTemplateResponse struct {
-	ID string `json:"id"`
-}
-
-func (s *Server) CreateHTMLTemplateHandler(w http.ResponseWriter, r *http.Request) error {
-	r.Body = http.MaxBytesReader(w, r.Body, 512<<10)
-
-	if err := r.ParseMultipartForm(256 << 10); err != nil {
-		return err
+func (s *Server) GetHTMLTemplateHandler(w http.ResponseWriter, r *http.Request) error {
+	id := r.PathValue("id")
+	if id == "" {
+		return apierror.NewBadRequestError(errors.New("id is required"), "Id is required")
 	}
-	file, _, err := r.FormFile("file")
-	name := r.FormValue("name")
-	if err != nil {
-		return err
-	}
-	if name == "" {
-		return apierror.NewBadRequestError(errors.New("name is required"), "Name is required")
-	}
-	defer file.Close()
 
 	ctx := r.Context()
-	id, err := s.templateService.Save(ctx, name, &file)
+	tmpl, err := s.templateService.GetRaw(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusAccepted)
-	response := CreateHTMLTemplateResponse{ID: id}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte(tmpl)); err != nil {
 		return err
 	}
 
@@ -99,6 +84,42 @@ func (s *Server) ListHTMLTemplatesHandler(w http.ResponseWriter, r *http.Request
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(templates); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type CreateHTMLTemplateResponse struct {
+	ID string `json:"id"`
+}
+
+func (s *Server) CreateHTMLTemplateHandler(w http.ResponseWriter, r *http.Request) error {
+	r.Body = http.MaxBytesReader(w, r.Body, 512<<10)
+
+	if err := r.ParseMultipartForm(256 << 10); err != nil {
+		return err
+	}
+	file, _, err := r.FormFile("file")
+	name := r.FormValue("name")
+	if err != nil {
+		return err
+	}
+	if name == "" {
+		return apierror.NewBadRequestError(errors.New("name is required"), "Name is required")
+	}
+	defer file.Close()
+
+	ctx := r.Context()
+	id, err := s.templateService.Save(ctx, name, &file)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
+	response := CreateHTMLTemplateResponse{ID: id}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		return err
 	}
 
