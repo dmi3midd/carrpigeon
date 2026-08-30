@@ -16,6 +16,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("POST /send/email", errs.ErrorHandler(s.SendEmailHandler))
 	mux.HandleFunc("POST /send/email/template", errs.ErrorHandler(s.SendEmailWithTemplateHandler))
 
+	mux.HandleFunc("GET /templates", errs.ErrorHandler(s.ListHTMLTemplatesHandler))
 	mux.HandleFunc("POST /templates", errs.ErrorHandler(s.CreateHTMLTemplateHandler))
 	mux.HandleFunc("DELETE /templates", errs.ErrorHandler(s.RemoveHTMLTemplateHandler))
 

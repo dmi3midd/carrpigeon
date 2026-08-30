@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"html/template"
 	"time"
 
 	"github.com/rs/xid"
@@ -31,18 +30,25 @@ type EmailService interface {
 }
 
 type emailService struct {
-	config       *config.SMTP
-	client       EmailClient
-	emailRepo    repository.EmailRepository
-	templateRepo repository.HTMLTemplateRepository
+	config          *config.SMTP
+	client          EmailClient
+	emailRepo       repository.EmailRepository
+	templateService HTMLTemplateService
+	// templateRepo repository.HTMLTemplateRepository
+	// cache        *shkvcache.Cache[*template.Template]
 }
 
-func NewEmailService(client EmailClient, emailRepo repository.EmailRepository, templateRepo repository.HTMLTemplateRepository, cfg *config.SMTP) EmailService {
+func NewEmailService(
+	client EmailClient,
+	emailRepo repository.EmailRepository,
+	templateService HTMLTemplateService,
+	cfg *config.SMTP,
+) EmailService {
 	return &emailService{
-		config:       cfg,
-		client:       client,
-		emailRepo:    emailRepo,
-		templateRepo: templateRepo,
+		config:          cfg,
+		client:          client,
+		emailRepo:       emailRepo,
+		templateService: templateService,
 	}
 }
 
@@ -71,12 +77,7 @@ func (s *emailService) Send(ctx context.Context, to, subject, body string) error
 func (s *emailService) SendWithTemplate(ctx context.Context, to, subject, templateId string, data interface{}) error {
 	op := "EmailService.SendWithTemplate"
 
-	tmplData, err := s.templateRepo.GetByID(ctx, templateId)
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
-	}
-
-	tmpl, err := template.New(tmplData.Name).Parse(tmplData.Content)
+	tmpl, err := s.templateService.GetParsed(ctx, templateId)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

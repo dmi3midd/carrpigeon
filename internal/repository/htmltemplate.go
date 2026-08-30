@@ -22,6 +22,8 @@ type HTMLTemplateRepository interface {
 	Create(ctx context.Context, template *domain.HTMLTemplate) error
 	// Delete deletes template from db.
 	Delete(ctx context.Context, id string) error
+	// List returns list of html template metadata with pagination.
+	List(ctx context.Context, limit, offset int) ([]domain.HTMLTemplateMetadata, error)
 }
 
 type htmlTemplateRepository struct {
@@ -77,3 +79,20 @@ func (r *htmlTemplateRepository) Delete(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+func (r *htmlTemplateRepository) List(ctx context.Context, limit, offset int) ([]domain.HTMLTemplateMetadata, error) {
+	op := "HTMLTemplateRepository.List"
+	templates := make([]domain.HTMLTemplateMetadata, 0)
+	query := `
+	SELECT id, name, created_at
+	FROM html_templates
+	ORDER BY created_at DESC
+	LIMIT $1 OFFSET $2
+	`
+	err := r.db.SelectContext(ctx, &templates, query, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return templates, nil
+}
+
