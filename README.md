@@ -82,25 +82,15 @@ make watch
 
 The server starts on `http://localhost:2500`.
 
-### Option B: Docker — app + PostgreSQL (Recommended if you don't have PostgreSQL DB)
+### Option B: Docker (App + PostgreSQL)
 
-Set `host: postgres` in `config.yaml`, then:
-
-```bash
-make docker-run-all
-```
-
-This spins up both the app and a PostgreSQL container. Migrations run automatically on startup.
-
-### Option C: Docker — app only (external PostgreSQL)
-
-If PostgreSQL is already running on your machine, set `host: host.docker.internal` in `config.yaml`, then:
+Make sure `host: postgres` is configured in `config.yaml`, then:
 
 ```bash
 make docker-run
 ```
 
-This starts only the app container; it connects to your host's PostgreSQL.
+This builds the Docker image and starts both the application and PostgreSQL containers in the background. Database migrations run automatically on startup.
 
 ## API Endpoints
 
@@ -241,15 +231,19 @@ You can populate these values by sending them in the `data` field of the `POST /
 
 | Command | Description |
 |---------|-------------|
-| `make setup` | Initialize project (directories, config, log file) |
-| `make build` | Compile the binary |
+| `make setup` | Initialize project (directories and config file) |
 | `make run` | Run the application locally |
+| `make build` | Compile the binary locally |
 | `make watch` | Live reload with [air](https://github.com/air-verse/air) |
+| `make test` | Run tests |
+| `make tidy` | Run go mod tidy |
 | `make clean` | Remove the compiled binary |
-| `make docker-run-all` | Start app + PostgreSQL in Docker |
-| `make docker-run` | Start app only in Docker (external DB) |
+| `make docker-build` | Build Docker images |
+| `make docker-run` | Build and start all containers in background |
 | `make docker-down` | Stop all Docker containers |
+| `make docker-down-v` | Stop containers and remove volumes (clean database reset) |
 | `make docker-logs` | Follow app container logs |
+| `make docker-restart` | Restart application container |
 
 ## Project Structure
 

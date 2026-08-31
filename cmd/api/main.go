@@ -2,7 +2,7 @@ package main
 
 import (
 	"carrpigeo/internal/config"
-	"carrpigeo/internal/logs"
+	"carrpigeo/internal/logger"
 	"carrpigeo/internal/postgres"
 	"carrpigeo/internal/repository"
 	"carrpigeo/internal/server"
@@ -29,11 +29,8 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	logFile, err := logs.Setup(cfg.Log.LogPath)
-	if err != nil {
-		log.Fatalf("failed to setup logger: %v", err)
-	}
-	defer logFile.Close()
+	// Initialize logger
+	logger.Setup(cfg.Logger.Level)
 
 	db, err := postgres.New(&cfg.Database)
 	if err != nil {
@@ -43,13 +40,21 @@ func main() {
 	defer db.Close()
 
 	// Cache
-	parsedTmplCache, err := shkvcache.NewCache[*template.Template](ctx, &shkvcache.Options{})
+	parsedTmplCache, err := shkvcache.NewCache[*template.Template](ctx, &shkvcache.Options{
+		ShardCount:      8,
+		CleanerInterval: 60,
+		RunCleaner:      true,
+	})
 	if err != nil {
 		slog.Error("failed to initialize parsed template cache", "error", err)
 		os.Exit(1)
 	}
 	defer parsedTmplCache.Close()
-	rawTmplCache, err := shkvcache.NewCache[string](ctx, &shkvcache.Options{})
+	rawTmplCache, err := shkvcache.NewCache[string](ctx, &shkvcache.Options{
+		ShardCount:      8,
+		CleanerInterval: 60,
+		RunCleaner:      true,
+	})
 	if err != nil {
 		slog.Error("failed to initialize raw template cache", "error", err)
 		os.Exit(1)

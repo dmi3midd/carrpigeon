@@ -39,15 +39,15 @@ type SMTP struct {
 	Password string `yaml:"password"`
 }
 
-type Log struct {
-	LogPath string `yaml:"logPath"`
+type Logger struct {
+	Level string `yaml:"level"`
 }
 
 type Config struct {
 	Database   `yaml:"database"`
 	HTTPServer `yaml:"httpServer"`
 	SMTP       `yaml:"smtp"`
-	Log        `yaml:"log"`
+	Logger     `yaml:"logger"`
 }
 
 func LoadConfig() (*Config, error) {

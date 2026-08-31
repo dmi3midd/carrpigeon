@@ -1,34 +1,38 @@
 services:
-  postgres:
-    image: postgres:17-alpine
-    container_name: carrpigeo-db
-    restart: unless-stopped
-    profiles: [ db ]
-    environment:
-      POSTGRES_DB: carrpigeo
-      POSTGRES_USER: carrpigeo_user
-      POSTGRES_PASSWORD: carrpigeo_9876
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U carrpigeo_user -d carrpigeo" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  app:
+  carrpigeon:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: carrpigeo-app
+    container_name: carrpigeon-api
     restart: unless-stopped
     ports:
       - "2500:2500"
+    environment:
+      CONFIG_PATH: /app/config.yaml
     volumes:
       - ./config.yaml:/app/config.yaml:ro
       - ./storage:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: carrpigeon-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: carrpigeon
+      POSTGRES_USER: carrpigeon_user
+      POSTGRES_PASSWORD: carrpigeon_9876
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U carrpigeon_user -d carrpigeon" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

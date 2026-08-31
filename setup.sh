@@ -13,10 +13,4 @@ if [ ! -f config.yaml ]; then
     fi
 fi
 
-# 3. Log file
-if [ ! -f storage/carrpigeo.log ]; then
-    echo -e "Waiting for log file..."
-    touch storage/carrpigeo.log
-fi
-
 echo -e "Initialization is completed."
