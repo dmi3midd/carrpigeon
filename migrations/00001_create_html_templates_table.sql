@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE html_patterns (
+CREATE TABLE html_templates (
     id VARCHAR(20) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
@@ -7,4 +7,4 @@ CREATE TABLE html_patterns (
 );
 
 -- +goose Down
-DROP TABLE html_patterns;
+DROP TABLE IF EXISTS html_templates;

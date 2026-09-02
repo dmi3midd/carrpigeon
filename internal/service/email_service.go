@@ -57,7 +57,7 @@ func (s *emailService) Send(ctx context.Context, to, subject, body string) error
 	email := domain.Email{
 		ID:       xid.New().String(),
 		Sender:   s.config.User,
-		Reciever: to,
+		Receiver: to,
 		Subject:  subject,
 		Body:     body,
 		IsHTML:   false,
@@ -90,7 +90,7 @@ func (s *emailService) SendWithTemplate(ctx context.Context, to, subject, templa
 	email := domain.Email{
 		ID:       xid.New().String(),
 		Sender:   s.config.User,
-		Reciever: to,
+		Receiver: to,
 		Subject:  subject,
 		Body:     body.String(),
 		IsHTML:   true,
