@@ -7,6 +7,8 @@ import (
 	"carrpigeo/internal/postgres"
 	"carrpigeo/internal/repository"
 	"carrpigeo/internal/server"
+	"carrpigeo/internal/server/handlers"
+	"carrpigeo/internal/server/middlewares"
 	"carrpigeo/internal/service"
 	"context"
 	"html/template"
@@ -65,13 +67,24 @@ func main() {
 	// Repositories
 	htmlTemplateRepository := repository.NewHTMLTemplateRepository(db.GetDB())
 	emailRepository := repository.NewEmailRepository(db.GetDB())
+	emailReceiverRepository := repository.NewEmailReceiverRepository(db.GetDB())
 
 	// Services
 	htmlTemplateService := service.NewHTMLTemplateService(htmlTemplateRepository, parsedTmplCache, rawTmplCache)
 	emailClient := client.NewEmailClient(&cfg.SMTP)
 	emailService := service.NewEmailService(emailClient, emailRepository, htmlTemplateService, &cfg.SMTP)
+	emailReceiverService := service.NewEmailReceiverService(emailReceiverRepository)
 
-	server := server.NewServer(cfg, db, emailService, htmlTemplateService)
+	// Handlers
+	emailReceiversHandler := handlers.NewEmailReceiversHandler(emailReceiverService)
+	sendHandler := handlers.NewSendHandler(emailService)
+	templateHandler := handlers.NewTemplateHandlers(htmlTemplateService)
+	systemHandler := handlers.NewSystemHandler(db)
+
+	// Middleware
+	middlewares := middlewares.NewMiddlewares(cfg)
+
+	server := server.NewServer(cfg, middlewares, systemHandler, sendHandler, emailReceiversHandler, templateHandler)
 
 	slog.Info(
 		"server is running",

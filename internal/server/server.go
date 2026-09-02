@@ -4,34 +4,34 @@ import (
 	"net/http"
 
 	"carrpigeo/internal/config"
-	"carrpigeo/internal/postgres"
-	"carrpigeo/internal/service"
-
-	"github.com/go-playground/validator/v10"
+	"carrpigeo/internal/server/handlers"
+	"carrpigeo/internal/server/middlewares"
 )
 
 type Server struct {
-	postgres        postgres.PostgresService
-	cfg             *config.Config
-	emailService    service.EmailService
-	templateService service.HTMLTemplateService
-	validator       *validator.Validate
+	cfg               *config.Config
+	middlewares       *middlewares.Middlewares
+	systemHandler     *handlers.SystemHandler
+	sendHandler       *handlers.SendHandler
+	receiversHandlers *handlers.EmailReceiversHandler
+	templateHandlers  *handlers.TemplateHandlers
 }
 
 func NewServer(
 	cfg *config.Config,
-	postgres postgres.PostgresService,
-	emailService service.EmailService,
-	templateService service.HTMLTemplateService,
+	middlewares *middlewares.Middlewares,
+	systemHandler *handlers.SystemHandler,
+	sendHandler *handlers.SendHandler,
+	receiversHandlers *handlers.EmailReceiversHandler,
+	templateHandlers *handlers.TemplateHandlers,
 ) *http.Server {
-	validator := validator.New()
-
 	s := &Server{
-		postgres:        postgres,
-		cfg:             cfg,
-		emailService:    emailService,
-		templateService: templateService,
-		validator:       validator,
+		cfg:               cfg,
+		middlewares:       middlewares,
+		systemHandler:     systemHandler,
+		sendHandler:       sendHandler,
+		receiversHandlers: receiversHandlers,
+		templateHandlers:  templateHandlers,
 	}
 
 	router := s.RegisterRoutes()
@@ -43,4 +43,3 @@ func NewServer(
 		WriteTimeout: cfg.HTTPServer.WriteTimeout,
 	}
 }
-

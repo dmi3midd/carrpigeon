@@ -1,11 +1,22 @@
-package server
+package middlewares
 
 import (
+	"carrpigeo/internal/config"
 	"net/http"
 	"slices"
 )
 
-func (s *Server) corsMiddleware(next http.Handler) http.Handler {
+type Middlewares struct {
+	cfg *config.Config
+}
+
+func NewMiddlewares(cfg *config.Config) *Middlewares {
+	return &Middlewares{
+		cfg: cfg,
+	}
+}
+
+func (s *Middlewares) СorsMiddleware(next http.Handler) http.Handler {
 	allowedOrigins := s.cfg.HTTPServer.CORS.AllowedOrigins
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
