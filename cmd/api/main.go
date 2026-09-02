@@ -1,6 +1,7 @@
 package main
 
 import (
+	"carrpigeo/internal/client"
 	"carrpigeo/internal/config"
 	"carrpigeo/internal/logger"
 	"carrpigeo/internal/postgres"
@@ -67,7 +68,7 @@ func main() {
 
 	// Services
 	htmlTemplateService := service.NewHTMLTemplateService(htmlTemplateRepository, parsedTmplCache, rawTmplCache)
-	emailClient := service.NewEmailClient(&cfg.SMTP)
+	emailClient := client.NewEmailClient(&cfg.SMTP)
 	emailService := service.NewEmailService(emailClient, emailRepository, htmlTemplateService, &cfg.SMTP)
 
 	server := server.NewServer(cfg, db, emailService, htmlTemplateService)

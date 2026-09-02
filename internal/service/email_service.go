@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"carrpigeo/internal/client"
 	"carrpigeo/internal/config"
 	"carrpigeo/internal/domain"
 	"carrpigeo/internal/repository"
@@ -31,7 +32,7 @@ type EmailService interface {
 
 type emailService struct {
 	config          *config.SMTP
-	client          EmailClient
+	client          client.EmailClient
 	emailRepo       repository.EmailRepository
 	templateService HTMLTemplateService
 	// templateRepo repository.HTMLTemplateRepository
@@ -39,7 +40,7 @@ type emailService struct {
 }
 
 func NewEmailService(
-	client EmailClient,
+	client client.EmailClient,
 	emailRepo repository.EmailRepository,
 	templateService HTMLTemplateService,
 	cfg *config.SMTP,
