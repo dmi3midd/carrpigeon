@@ -12,6 +12,7 @@ import (
 	"carrpigeo/internal/server/middlewares"
 	"carrpigeo/internal/service"
 	"context"
+	"errors"
 	"html/template"
 	"log"
 	"log/slog"
@@ -74,7 +75,7 @@ func main() {
 	// Services
 	htmlTemplateService := service.NewHTMLTemplateService(htmlTemplateRepository, parsedTmplCache, rawTmplCache)
 	emailClient := client.NewEmailClient(&cfg.SMTP)
-	emailService := service.NewEmailService(emailClient, emailRepository, htmlTemplateService, &cfg.SMTP)
+	emailService := service.NewEmailService(emailClient, emailRepository, emailReceiverRepository, htmlTemplateService, &cfg.SMTP)
 	emailReceiverService := service.NewEmailReceiverService(emailReceiverRepository)
 
 	// Handlers
@@ -92,14 +93,12 @@ func main() {
 		"server is running",
 		slog.String("address", cfg.HTTPServer.Address),
 	)
-	err = server.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
-		slog.Error(
-			"failed to run server",
-			slog.String("error", err.Error()),
-		)
-		os.Exit(1)
-	}
+	go func() {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("failed to run server", slog.String("error", err.Error()))
+			os.Exit(1)
+		}
+	}()
 
 	// Graceful shutdown
 	<-ctx.Done()

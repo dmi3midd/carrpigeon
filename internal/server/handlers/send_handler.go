@@ -19,7 +19,7 @@ func NewSendHandler(emailService service.EmailService) *SendHandler {
 }
 
 func (h *SendHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("POST /send/email/", apierror.ErrorHandler(h.SendEmailHandler))
+	mux.HandleFunc("POST /send/email", apierror.ErrorHandler(h.SendEmailHandler))
 	mux.HandleFunc("POST /send/email/template", apierror.ErrorHandler(h.SendEmailWithTemplateHandler))
 }
 

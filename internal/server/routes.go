@@ -14,5 +14,5 @@ func (s *Server) RegisterRoutes() http.Handler {
 	s.templateHandlers.RegisterRoutes(mux)
 
 	// Wrap the mux with CORS middleware
-	return s.middlewares.СorsMiddleware(mux)
+	return s.middlewares.CorsMiddleware(mux)
 }

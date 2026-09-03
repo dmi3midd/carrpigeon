@@ -34,14 +34,14 @@ type emailService struct {
 	config          *config.SMTP
 	client          client.EmailClient
 	emailRepo       repository.EmailRepository
+	receiverRepo    repository.EmailReceiverRepository
 	templateService HTMLTemplateService
-	// templateRepo repository.HTMLTemplateRepository
-	// cache        *shkvcache.Cache[*template.Template]
 }
 
 func NewEmailService(
 	client client.EmailClient,
 	emailRepo repository.EmailRepository,
+	receiverRepo repository.EmailReceiverRepository,
 	templateService HTMLTemplateService,
 	cfg *config.SMTP,
 ) EmailService {
@@ -49,12 +49,21 @@ func NewEmailService(
 		config:          cfg,
 		client:          client,
 		emailRepo:       emailRepo,
+		receiverRepo:    receiverRepo,
 		templateService: templateService,
 	}
 }
 
 func (s *emailService) Send(ctx context.Context, to, subject, body string) error {
 	op := "EmailService.Send"
+
+	if _, err := s.receiverRepo.GetByEmail(ctx, to); err != nil {
+		if errors.Is(err, repository.ErrNoReceiver) {
+			return fmt.Errorf("%s: %w", op, ErrReceiverNotFound)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
 	email := domain.Email{
 		ID:       xid.New().String(),
 		Sender:   s.config.User,
@@ -78,6 +87,13 @@ func (s *emailService) Send(ctx context.Context, to, subject, body string) error
 func (s *emailService) SendWithTemplate(ctx context.Context, to, subject, templateId string, data interface{}) error {
 	op := "EmailService.SendWithTemplate"
 
+	if _, err := s.receiverRepo.GetByEmail(ctx, to); err != nil {
+		if errors.Is(err, repository.ErrNoReceiver) {
+			return fmt.Errorf("%s: %w", op, ErrReceiverNotFound)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
 	tmpl, err := s.templateService.GetParsed(ctx, templateId)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -89,13 +105,14 @@ func (s *emailService) SendWithTemplate(ctx context.Context, to, subject, templa
 	}
 
 	email := domain.Email{
-		ID:       xid.New().String(),
-		Sender:   s.config.User,
-		Receiver: to,
-		Subject:  subject,
-		Body:     body.String(),
-		IsHTML:   true,
-		SentAt:   time.Now(),
+		ID:             xid.New().String(),
+		Sender:         s.config.User,
+		Receiver:       to,
+		Subject:        subject,
+		Body:           body.String(),
+		IsHTML:         true,
+		HTMLTemplateID: &templateId,
+		SentAt:         time.Now(),
 	}
 
 	if err := s.client.Send(&email); err != nil {

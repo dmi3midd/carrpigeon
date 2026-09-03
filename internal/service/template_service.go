@@ -142,7 +142,7 @@ func (s *htmlTemplateService) Save(ctx context.Context, name string, file multip
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
-	if mimeType != "text/html" {
+	if !strings.HasPrefix(mimeType, "text/html") {
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidFileType)
 	}
 

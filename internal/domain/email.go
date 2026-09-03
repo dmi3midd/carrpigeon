@@ -9,6 +9,6 @@ type Email struct {
 	Subject        string    `json:"subject" db:"subject"`
 	Body           string    `json:"body" db:"body"`
 	IsHTML         bool      `json:"is_html" db:"is_html"`
-	HTMLTemplateID string    `json:"html_template_id" db:"html_template_id"`
+	HTMLTemplateID *string   `json:"html_template_id" db:"html_template_id"`
 	SentAt         time.Time `json:"sent_at" db:"sent_at"`
 }

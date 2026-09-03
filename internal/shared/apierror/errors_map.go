@@ -12,11 +12,20 @@ var ErrorMap = map[error]func(err error) error{
 	service.ErrFailedToSaveEmail: func(err error) error {
 		return NewInternalServerError(err)
 	},
+	service.ErrReceiverNotFound: func(err error) error {
+		return NewNotFoundError(err, "Receiver not found")
+	},
+	service.ErrReceiverAlreadyExists: func(err error) error {
+		return NewConflictError(err, "Receiver already exists")
+	},
 	service.ErrInvalidFileType: func(err error) error {
 		return NewBadRequestError(err, "Invalid file type")
 	},
 	service.ErrTemplateNotFound: func(err error) error {
 		return NewNotFoundError(err, "Template not found")
+	},
+	service.ErrTemplateAlreadyExists: func(err error) error {
+		return NewConflictError(err, "Template already exists")
 	},
 }
 

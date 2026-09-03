@@ -166,7 +166,7 @@ func (h *TemplateHandlers) UpdateHTMLTemplateHandler(w http.ResponseWriter, r *h
 }
 
 func (h *TemplateHandlers) RemoveHTMLTemplateHandler(w http.ResponseWriter, r *http.Request) error {
-	id := r.URL.Query().Get("id")
+	id := r.PathValue("id")
 	if id == "" {
 		return apierror.NewBadRequestError(errors.New("ID is required"), "ID is required")
 	}
