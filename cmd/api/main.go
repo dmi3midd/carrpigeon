@@ -3,6 +3,7 @@ package main
 import (
 	"carrpigeo/internal/client"
 	"carrpigeo/internal/config"
+	"carrpigeo/internal/domain"
 	"carrpigeo/internal/logger"
 	"carrpigeo/internal/postgres"
 	"carrpigeo/internal/repository"
@@ -53,7 +54,8 @@ func main() {
 		os.Exit(1)
 	}
 	defer parsedTmplCache.Close()
-	rawTmplCache, err := shkvcache.NewCache[string](ctx, &shkvcache.Options{
+
+	rawTmplCache, err := shkvcache.NewCache[*domain.HTMLTemplate](ctx, &shkvcache.Options{
 		ShardCount:      8,
 		CleanerInterval: 60,
 		RunCleaner:      true,

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"carrpigeo/internal/domain"
 	"carrpigeo/internal/service"
 	"carrpigeo/internal/shared/apierror"
 	"encoding/json"
@@ -8,9 +9,6 @@ import (
 	"net/http"
 	"strconv"
 )
-
-// TODO: Add GetTemplateMetadataHandler.
-// TODO: Add UpdateTemplateHandler.
 
 type TemplateHandlers struct {
 	templateService service.HTMLTemplateService
@@ -24,11 +22,12 @@ func (h *TemplateHandlers) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /templates/{id}", apierror.ErrorHandler(h.GetTemplateRawHandler))
 	mux.HandleFunc("GET /templates", apierror.ErrorHandler(h.ListTemplateMetadataHandler))
 	mux.HandleFunc("POST /templates", apierror.ErrorHandler(h.CreateHTMLTemplateHandler))
+	mux.HandleFunc("PUT /templates/{id}", apierror.ErrorHandler(h.UpdateHTMLTemplateHandler))
 	mux.HandleFunc("DELETE /templates/{id}", apierror.ErrorHandler(h.RemoveHTMLTemplateHandler))
 }
 
 type GetTemplateRawResponse struct {
-	Template string `json:"template"`
+	Template *domain.HTMLTemplate `json:"template"`
 }
 
 func (h *TemplateHandlers) GetTemplateRawHandler(w http.ResponseWriter, r *http.Request) error {
@@ -110,7 +109,7 @@ func (h *TemplateHandlers) CreateHTMLTemplateHandler(w http.ResponseWriter, r *h
 	defer file.Close()
 
 	ctx := r.Context()
-	id, err := h.templateService.Save(ctx, name, &file)
+	id, err := h.templateService.Save(ctx, name, file)
 	if err != nil {
 		return err
 	}
@@ -118,6 +117,47 @@ func (h *TemplateHandlers) CreateHTMLTemplateHandler(w http.ResponseWriter, r *h
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
 	response := &CreateHTMLTemplateResponse{ID: id}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type UpdateHTMLTemplateResponse struct {
+	ID string `json:"id"`
+}
+
+func (h *TemplateHandlers) UpdateHTMLTemplateHandler(w http.ResponseWriter, r *http.Request) error {
+	id := r.PathValue("id")
+	if id == "" {
+		return apierror.NewBadRequestError(errors.New("id is required"), "Id is required")
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, 512<<10)
+
+	if err := r.ParseMultipartForm(256 << 10); err != nil {
+		return err
+	}
+	file, _, err := r.FormFile("file")
+	name := r.FormValue("name")
+	if err != nil {
+		return err
+	}
+	if name == "" {
+		return apierror.NewBadRequestError(errors.New("name is required"), "Name is required")
+	}
+	defer file.Close()
+
+	ctx := r.Context()
+	tmplId, err := h.templateService.Update(ctx, id, name, file)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	response := &UpdateHTMLTemplateResponse{ID: tmplId}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		return err
 	}
