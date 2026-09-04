@@ -15,6 +15,7 @@ var (
 	ErrGroupAlreadyExists     = errors.New("group already exists")
 	ErrGroupNotFound          = errors.New("group not found")
 	ErrReceiverAlreadyInGroup = errors.New("receiver already in group")
+	ErrReceiverNotInGroup     = errors.New("receiver not in group")
 )
 
 type GroupService interface {
@@ -38,7 +39,6 @@ type GroupService interface {
 	// Returns [ErrReceiverAlreadyInGroup] if the receiver is already in the group.
 	AddReceiver(ctx context.Context, groupID, receiverID string) error
 	// RemoveReceiver removes a receiver from a group.
-	// Returns [ErrGroupNotFound] if no group is found.
 	RemoveReceiver(ctx context.Context, groupID, receiverID string) error
 	// ListReceivers returns a list of receivers in a group.
 	// Returns [ErrGroupNotFound] if no group is found
@@ -50,7 +50,10 @@ type groupService struct {
 	receiverRepo repository.EmailReceiverRepository
 }
 
-func NewGroupService(groupRepo repository.GroupRepository, receiverRepo repository.EmailReceiverRepository) GroupService {
+func NewGroupService(
+	groupRepo repository.GroupRepository,
+	receiverRepo repository.EmailReceiverRepository,
+) GroupService {
 	return &groupService{
 		groupRepo:    groupRepo,
 		receiverRepo: receiverRepo,
@@ -71,6 +74,14 @@ func (s *groupService) GetByID(ctx context.Context, id string) (*domain.Group, e
 
 func (s *groupService) List(ctx context.Context, limit, offset int) ([]domain.Group, error) {
 	op := "GroupService.List"
+
+	if limit <= 0 {
+		limit = 10
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
 	groups, err := s.groupRepo.List(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -80,19 +91,20 @@ func (s *groupService) List(ctx context.Context, limit, offset int) ([]domain.Gr
 
 func (s *groupService) Create(ctx context.Context, name, description string) (string, error) {
 	op := "GroupService.Create"
-	candidate, err := s.groupRepo.GetByName(ctx, name)
+	existingGroup, err := s.groupRepo.GetByName(ctx, name)
 	if err != nil && !errors.Is(err, repository.ErrNoGroup) {
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
-	if candidate != nil {
+	if existingGroup != nil {
 		return "", fmt.Errorf("%s: %w", op, ErrGroupAlreadyExists)
 	}
 	group := &domain.Group{
-		ID:          xid.New().String(),
-		Name:        name,
-		Description: description,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		ID:             xid.New().String(),
+		Name:           name,
+		Description:    description,
+		ReceiversCount: 0,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 	if err := s.groupRepo.Create(ctx, group); err != nil {
 		return "", fmt.Errorf("%s: %w", op, err)
@@ -154,14 +166,32 @@ func (s *groupService) AddReceiver(ctx context.Context, groupID, receiverID stri
 	if err := s.groupRepo.AddReceiver(ctx, groupID, receiverID); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
+
 	return nil
 }
 
 func (s *groupService) RemoveReceiver(ctx context.Context, groupID, receiverID string) error {
 	op := "GroupService.RemoveReceiver"
+
+	// if _, err := s.groupRepo.GetByID(ctx, groupID); err != nil {
+	// 	if errors.Is(err, repository.ErrNoGroup) {
+	// 		return fmt.Errorf("%s: %w", op, ErrGroupNotFound)
+	// 	}
+	// 	return fmt.Errorf("%s: %w", op, err)
+	// }
+
+	// exists, err := s.groupRepo.IsReceiverInGroup(ctx, groupID, receiverID)
+	// if err != nil {
+	// 	return fmt.Errorf("%s: %w", op, err)
+	// }
+	// if !exists {
+	// 	return fmt.Errorf("%s: %w", op, ErrReceiverNotInGroup)
+	// }
+
 	if err := s.groupRepo.RemoveReceiver(ctx, groupID, receiverID); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
+
 	return nil
 }
 

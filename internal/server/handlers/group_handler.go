@@ -198,12 +198,6 @@ func (h *GroupHandler) AddReceiver(w http.ResponseWriter, r *http.Request) error
 		return apierror.NewBadRequestError(errors.New("id is required"), "Id is required")
 	}
 
-	var req UpdateGroupRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return err
-	}
-	defer r.Body.Close()
-
 	ctx := r.Context()
 	if err := h.groupService.AddReceiver(ctx, groupId, receiverId); err != nil {
 		return err

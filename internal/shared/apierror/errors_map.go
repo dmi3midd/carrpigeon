@@ -27,6 +27,18 @@ var ErrorMap = map[error]func(err error) error{
 	service.ErrTemplateAlreadyExists: func(err error) error {
 		return NewConflictError(err, "Template already exists")
 	},
+	service.ErrGroupNotFound: func(err error) error {
+		return NewNotFoundError(err, "Group not found")
+	},
+	service.ErrGroupAlreadyExists: func(err error) error {
+		return NewConflictError(err, "Group already exists")
+	},
+	service.ErrReceiverAlreadyInGroup: func(err error) error {
+		return NewConflictError(err, "Receiver already in group")
+	},
+	service.ErrReceiverNotInGroup: func(err error) error {
+		return NewNotFoundError(err, "Receiver not in group")
+	},
 }
 
 func MapError(err error) error {

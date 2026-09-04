@@ -53,9 +53,13 @@ func NewGroupRepository(db *sqlx.DB) GroupRepository {
 func (r *groupRepository) GetByID(ctx context.Context, id string) (*domain.Group, error) {
 	op := "GroupRepository.GetByID"
 	query := `
-		SELECT id, name, description, created_at, updated_at
-		FROM groups
-		WHERE id = $1
+		SELECT g.id, g.name, g.description, 
+		       COALESCE(COUNT(gr.receiver_id), 0) AS receivers_count, 
+		       g.created_at, g.updated_at
+		FROM groups g
+		LEFT JOIN groups_receivers gr ON g.id = gr.group_id
+		WHERE g.id = $1
+		GROUP BY g.id
 	`
 	var group domain.Group
 	err := r.DB.GetContext(ctx, &group, query, id)
@@ -71,9 +75,13 @@ func (r *groupRepository) GetByID(ctx context.Context, id string) (*domain.Group
 func (r *groupRepository) GetByName(ctx context.Context, name string) (*domain.Group, error) {
 	op := "GroupRepository.GetByName"
 	query := `
-		SELECT id, name, description, created_at, updated_at
-		FROM groups
-		WHERE name = $1
+		SELECT g.id, g.name, g.description, 
+		       COALESCE(COUNT(gr.receiver_id), 0) AS receivers_count, 
+		       g.created_at, g.updated_at
+		FROM groups g
+		LEFT JOIN groups_receivers gr ON g.id = gr.group_id
+		WHERE g.name = $1
+		GROUP BY g.id
 	`
 	var group domain.Group
 	err := r.DB.GetContext(ctx, &group, query, name)
@@ -89,8 +97,13 @@ func (r *groupRepository) GetByName(ctx context.Context, name string) (*domain.G
 func (r *groupRepository) List(ctx context.Context, limit, offset int) ([]domain.Group, error) {
 	op := "GroupRepository.List"
 	query := `
-		SELECT id, name, description, created_at, updated_at
-		FROM groups
+		SELECT g.id, g.name, g.description, 
+		       COALESCE(COUNT(gr.receiver_id), 0) AS receivers_count, 
+		       g.created_at, g.updated_at
+		FROM groups g
+		LEFT JOIN groups_receivers gr ON g.id = gr.group_id
+		GROUP BY g.id
+		ORDER BY g.created_at DESC
 		LIMIT $1 OFFSET $2
 	`
 	var groups []domain.Group
