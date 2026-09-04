@@ -69,6 +69,14 @@ func (s *emailReceiverService) GetByEmail(ctx context.Context, email string) (*d
 
 func (s *emailReceiverService) List(ctx context.Context, limit, offset int) ([]*domain.EmailReceiver, error) {
 	op := "EmailReceiverService.List"
+
+	if limit <= 0 {
+		limit = 10
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
 	receivers, err := s.repo.List(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)

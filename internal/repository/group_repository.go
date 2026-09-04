@@ -30,6 +30,8 @@ type GroupRepository interface {
 	// Delete deletes a group by its ID
 	Delete(ctx context.Context, id string) error
 
+	// IsReceiverInGroup checks if a receiver is in a group
+	IsReceiverInGroup(ctx context.Context, groupID, receiverID string) (bool, error)
 	// AddReceiver adds a receiver to a group
 	AddReceiver(ctx context.Context, groupID, receiverID string) error
 	// RemoveReceiver removes a receiver from a group
@@ -137,6 +139,23 @@ func (r *groupRepository) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	return nil
+}
+
+func (r *groupRepository) IsReceiverInGroup(ctx context.Context, groupID, receiverID string) (bool, error) {
+	op := "GroupRepository.IsReceiverInGroup"
+	query := `
+		SELECT EXISTS(
+			SELECT 1
+			FROM groups_receivers
+			WHERE group_id = $1 AND receiver_id = $2
+		)
+	`
+	var exists bool
+	err := r.DB.GetContext(ctx, &exists, query, groupID, receiverID)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+	return exists, nil
 }
 
 func (r *groupRepository) AddReceiver(ctx context.Context, groupID, receiverID string) error {
