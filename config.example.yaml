@@ -1,4 +1,4 @@
-database:
+postgres:
   name: carrpigeon
   host: postgres
   port: 5432
@@ -17,11 +17,16 @@ httpServer:
     allowedOrigins:
       - http://localhost:3000
       - http://localhost:5173
-      - http://localhost:8080
-smtp:
-  host: smtp.gmail.com
-  port: 587
-  user: [EMAIL_ADDRESS]
-  password: [PASSWORD]
+email:
+  smtp:
+    host: smtp.gmail.com
+    port: 587
+    user: [EMAIL_ADDRESS]
+    password: [PASSWORD]
+  worker:
+    maxRetries: 3
+    workerPoolSize: 5
+    pollInterval: 2s
+    retryDelay: 10s
 logger:
   level: info # debug, info, warn, error

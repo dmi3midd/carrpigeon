@@ -37,11 +37,11 @@ type PostgresService interface {
 }
 
 type postgresService struct {
-	cfg *config.Database
+	cfg *config.Postgres
 	db  *sqlx.DB
 }
 
-func New(cfg *config.Database) (PostgresService, error) {
+func New(cfg *config.Postgres) (PostgresService, error) {
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name, cfg.SSLMode)
 	db, err := sqlx.Connect("pgx", connStr)
 	if err != nil {

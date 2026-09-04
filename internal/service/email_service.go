@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/rs/xid"
 )
@@ -65,16 +64,16 @@ func (s *emailService) Send(ctx context.Context, to, subject, body string) error
 	}
 
 	email := domain.Email{
-		ID:       xid.New().String(),
-		Sender:   s.config.User,
-		Receiver: to,
-		Subject:  subject,
-		Body:     body,
-		IsHTML:   false,
-		SentAt:   time.Now(),
-	}
-	if err := s.client.Send(&email); err != nil {
-		return fmt.Errorf("%s: %w: %w", op, ErrFailedToSendEmail, err)
+		ID:          xid.New().String(),
+		Sender:      s.config.User,
+		Receiver:    to,
+		Subject:     subject,
+		Body:        body,
+		IsHTML:      false,
+		Status:      domain.StatusPending,
+		Attempts:    0,
+		NextRetryAt: nil,
+		SentAt:      nil,
 	}
 
 	if err := s.emailRepo.Create(ctx, &email); err != nil {
@@ -112,11 +111,10 @@ func (s *emailService) SendWithTemplate(ctx context.Context, to, subject, templa
 		Body:           body.String(),
 		IsHTML:         true,
 		HTMLTemplateID: &templateId,
-		SentAt:         time.Now(),
-	}
-
-	if err := s.client.Send(&email); err != nil {
-		return fmt.Errorf("%s: %w: %w", op, ErrFailedToSendEmail, err)
+		Status:         domain.StatusPending,
+		Attempts:       0,
+		NextRetryAt:    nil,
+		SentAt:         nil,
 	}
 
 	if err := s.emailRepo.Create(ctx, &email); err != nil {

@@ -37,7 +37,7 @@ func main() {
 	// Initialize logger
 	logger.Setup(cfg.Logger.Level)
 
-	db, err := postgres.New(&cfg.Database)
+	db, err := postgres.New(&cfg.Postgres)
 	if err != nil {
 		slog.Error("failed to initialize database", "error", err)
 		os.Exit(1)
@@ -67,6 +67,17 @@ func main() {
 	}
 	defer rawTmplCache.Close()
 
+	emailCache, err := shkvcache.NewCache[*domain.Email](ctx, &shkvcache.Options{
+		ShardCount:      8,
+		CleanerInterval: 60,
+		RunCleaner:      false,
+	})
+	if err != nil {
+		slog.Error("failed to initialize email cache", "error", err)
+		os.Exit(1)
+	}
+	defer emailCache.Close()
+
 	// Repositories
 	htmlTemplateRepository := repository.NewHTMLTemplateRepository(db.GetDB())
 	emailRepository := repository.NewEmailRepository(db.GetDB())
@@ -75,10 +86,15 @@ func main() {
 
 	// Services
 	htmlTemplateService := service.NewHTMLTemplateService(htmlTemplateRepository, parsedTmplCache, rawTmplCache)
-	emailClient := client.NewEmailClient(&cfg.SMTP)
-	emailService := service.NewEmailService(emailClient, emailRepository, emailReceiverRepository, htmlTemplateService, &cfg.SMTP)
+	emailClient := client.NewEmailClient(&cfg.Email.SMTP)
+	emailService := service.NewEmailService(emailClient, emailRepository, emailReceiverRepository, htmlTemplateService, &cfg.Email.SMTP)
 	emailReceiverService := service.NewEmailReceiverService(emailReceiverRepository)
 	groupService := service.NewGroupService(groupRepository, emailReceiverRepository)
+
+	// Worker
+	emailWorker := client.NewEmailWorker(emailClient, emailRepository, emailCache, cfg.Email.Worker)
+	emailWorker.Start(ctx)
+	defer emailWorker.Stop()
 
 	// Handlers
 	emailReceiversHandler := handlers.NewEmailReceiversHandler(emailReceiverService)
@@ -116,5 +132,6 @@ func main() {
 	slog.Info("received shutdown signal, stopping application...")
 
 	server.Close()
+	emailWorker.Stop()
 	slog.Info("application stopped gracefully")
 }

@@ -8,7 +8,7 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-type Database struct {
+type Postgres struct {
 	Name         string        `yaml:"name"`
 	Host         string        `yaml:"host"`
 	Port         int           `yaml:"port"`
@@ -32,6 +32,18 @@ type CORS struct {
 	AllowedOrigins []string `yaml:"allowedOrigins"`
 }
 
+type Email struct {
+	SMTP   SMTP   `yaml:"smtp"`
+	Worker Worker `yaml:"worker"`
+}
+
+type Worker struct {
+	MaxRetries     int           `yaml:"maxRetries"`
+	WorkerPoolSize int           `yaml:"workerPoolSize"`
+	PollInterval   time.Duration `yaml:"pollInterval"`
+	RetryDelay     time.Duration `yaml:"retryDelay"`
+}
+
 type SMTP struct {
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`
@@ -44,10 +56,10 @@ type Logger struct {
 }
 
 type Config struct {
-	Database   `yaml:"database"`
-	HTTPServer `yaml:"httpServer"`
-	SMTP       `yaml:"smtp"`
-	Logger     `yaml:"logger"`
+	Postgres   Postgres   `yaml:"postgres"`
+	HTTPServer HTTPServer `yaml:"httpServer"`
+	Email      Email      `yaml:"email"`
+	Logger     Logger     `yaml:"logger"`
 }
 
 func LoadConfig() (*Config, error) {
