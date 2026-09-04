@@ -71,23 +71,34 @@ func main() {
 	htmlTemplateRepository := repository.NewHTMLTemplateRepository(db.GetDB())
 	emailRepository := repository.NewEmailRepository(db.GetDB())
 	emailReceiverRepository := repository.NewEmailReceiverRepository(db.GetDB())
+	groupRepository := repository.NewGroupRepository(db.GetDB())
 
 	// Services
 	htmlTemplateService := service.NewHTMLTemplateService(htmlTemplateRepository, parsedTmplCache, rawTmplCache)
 	emailClient := client.NewEmailClient(&cfg.SMTP)
 	emailService := service.NewEmailService(emailClient, emailRepository, emailReceiverRepository, htmlTemplateService, &cfg.SMTP)
 	emailReceiverService := service.NewEmailReceiverService(emailReceiverRepository)
+	groupService := service.NewGroupService(groupRepository, emailReceiverRepository)
 
 	// Handlers
 	emailReceiversHandler := handlers.NewEmailReceiversHandler(emailReceiverService)
 	sendHandler := handlers.NewSendHandler(emailService)
 	templateHandler := handlers.NewTemplateHandlers(htmlTemplateService)
+	groupHandler := handlers.NewGroupHandler(groupService)
 	systemHandler := handlers.NewSystemHandler(db)
 
 	// Middleware
 	middlewares := middlewares.NewMiddlewares(cfg)
 
-	server := server.NewServer(cfg, middlewares, systemHandler, sendHandler, emailReceiversHandler, templateHandler)
+	server := server.NewServer(
+		cfg,
+		middlewares,
+		systemHandler,
+		sendHandler,
+		emailReceiversHandler,
+		templateHandler,
+		groupHandler,
+	)
 
 	slog.Info(
 		"server is running",

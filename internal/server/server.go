@@ -15,6 +15,7 @@ type Server struct {
 	sendHandler       *handlers.SendHandler
 	receiversHandlers *handlers.EmailReceiversHandler
 	templateHandlers  *handlers.TemplateHandlers
+	groupHandler      *handlers.GroupHandler
 }
 
 func NewServer(
@@ -24,6 +25,7 @@ func NewServer(
 	sendHandler *handlers.SendHandler,
 	receiversHandlers *handlers.EmailReceiversHandler,
 	templateHandlers *handlers.TemplateHandlers,
+	groupHandler *handlers.GroupHandler,
 ) *http.Server {
 	s := &Server{
 		cfg:               cfg,
@@ -32,6 +34,7 @@ func NewServer(
 		sendHandler:       sendHandler,
 		receiversHandlers: receiversHandlers,
 		templateHandlers:  templateHandlers,
+		groupHandler:      groupHandler,
 	}
 
 	router := s.RegisterRoutes()

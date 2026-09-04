@@ -22,7 +22,7 @@ type GroupRepository interface {
 	// Returns ErrNoGroup if no group is found
 	GetByName(ctx context.Context, name string) (*domain.Group, error)
 	// List returns a list of groups
-	List(ctx context.Context, limit, offset int64) ([]domain.Group, error)
+	List(ctx context.Context, limit, offset int) ([]domain.Group, error)
 	// Create creates a new group
 	Create(ctx context.Context, group *domain.Group) error
 	// Update updates an existing group
@@ -37,7 +37,7 @@ type GroupRepository interface {
 	// RemoveReceiver removes a receiver from a group
 	RemoveReceiver(ctx context.Context, groupID, receiverID string) error
 	// ListReceivers returns a list of receivers in a group
-	ListReceivers(ctx context.Context, groupID string, limit, offset int64) ([]domain.EmailReceiver, error)
+	ListReceivers(ctx context.Context, groupID string, limit, offset int) ([]domain.EmailReceiver, error)
 }
 
 type groupRepository struct {
@@ -86,7 +86,7 @@ func (r *groupRepository) GetByName(ctx context.Context, name string) (*domain.G
 	return &group, nil
 }
 
-func (r *groupRepository) List(ctx context.Context, limit, offset int64) ([]domain.Group, error) {
+func (r *groupRepository) List(ctx context.Context, limit, offset int) ([]domain.Group, error) {
 	op := "GroupRepository.List"
 	query := `
 		SELECT id, name, description, created_at, updated_at
@@ -184,7 +184,7 @@ func (r *groupRepository) RemoveReceiver(ctx context.Context, groupID, receiverI
 	return nil
 }
 
-func (r *groupRepository) ListReceivers(ctx context.Context, groupID string, limit, offset int64) ([]domain.EmailReceiver, error) {
+func (r *groupRepository) ListReceivers(ctx context.Context, groupID string, limit, offset int) ([]domain.EmailReceiver, error) {
 	op := "GroupRepository.ListReceivers"
 	query := `
 		SELECT r.id, r.name, r.email, r.created_at, r.updated_at

@@ -22,7 +22,7 @@ type GroupService interface {
 	// Returns [ErrGroupNotFound] if no group is found
 	GetByID(ctx context.Context, id string) (*domain.Group, error)
 	// List returns a list of groups
-	List(ctx context.Context, limit, offset int64) ([]domain.Group, error)
+	List(ctx context.Context, limit, offset int) ([]domain.Group, error)
 	// Create creates a new group
 	// Returns [ErrGroupAlreadyExists] if a group with the same name already exists
 	Create(ctx context.Context, name, description string) (string, error)
@@ -42,7 +42,7 @@ type GroupService interface {
 	RemoveReceiver(ctx context.Context, groupID, receiverID string) error
 	// ListReceivers returns a list of receivers in a group.
 	// Returns [ErrGroupNotFound] if no group is found
-	ListReceivers(ctx context.Context, groupID string, limit, offset int64) ([]domain.EmailReceiver, error)
+	ListReceivers(ctx context.Context, groupID string, limit, offset int) ([]domain.EmailReceiver, error)
 }
 
 type groupService struct {
@@ -69,7 +69,7 @@ func (s *groupService) GetByID(ctx context.Context, id string) (*domain.Group, e
 	return group, nil
 }
 
-func (s *groupService) List(ctx context.Context, limit, offset int64) ([]domain.Group, error) {
+func (s *groupService) List(ctx context.Context, limit, offset int) ([]domain.Group, error) {
 	op := "GroupService.List"
 	groups, err := s.groupRepo.List(ctx, limit, offset)
 	if err != nil {
@@ -165,7 +165,7 @@ func (s *groupService) RemoveReceiver(ctx context.Context, groupID, receiverID s
 	return nil
 }
 
-func (s *groupService) ListReceivers(ctx context.Context, groupID string, limit, offset int64) ([]domain.EmailReceiver, error) {
+func (s *groupService) ListReceivers(ctx context.Context, groupID string, limit, offset int) ([]domain.EmailReceiver, error) {
 	op := "GroupService.ListReceivers"
 
 	if limit <= 0 {
