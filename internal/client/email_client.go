@@ -5,6 +5,8 @@ import (
 	"carrpigeo/internal/domain"
 	"crypto/tls"
 	"fmt"
+	"net/http"
+	"strings"
 
 	"gopkg.in/mail.v2"
 )
@@ -39,7 +41,8 @@ func (c *emailClient) buildMessage(email *domain.Email) *mail.Message {
 	msg.SetHeader("To", email.Receiver)
 	msg.SetHeader("Subject", email.Subject)
 	contentType := "text/plain"
-	if email.IsHTML {
+	detected := http.DetectContentType([]byte(email.Body))
+	if strings.HasPrefix(detected, "text/html") {
 		contentType = "text/html"
 	}
 	msg.SetBody(contentType, email.Body)

@@ -1,11 +1,13 @@
 -- +goose Up
-CREATE TABLE html_templates (
+CREATE TABLE templates (
     id VARCHAR(20) PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL,
     content TEXT NOT NULL,
+    is_html BOOLEAN NOT NULL DEFAULT FALSE,
+    fields TEXT[] NOT NULL DEFAULT '{}',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- +goose Down
-DROP TABLE IF EXISTS html_templates;
+DROP TABLE IF EXISTS templates;

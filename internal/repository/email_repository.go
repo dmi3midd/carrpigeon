@@ -43,8 +43,8 @@ func NewEmailRepository(db *sqlx.DB) EmailRepository {
 func (r *emailRepository) Create(ctx context.Context, email *domain.Email) error {
 	op := "EmailRepository.Create"
 	query := `
-	INSERT INTO emails (id, sender, receiver, subject, body, is_html, html_template_id, status, attempts, next_retry_at, last_error, sent_at)
-	VALUES (:id, :sender, :receiver, :subject, :body, :is_html, :html_template_id, :status, :attempts, :next_retry_at, :last_error, :sent_at)
+	INSERT INTO emails (id, sender, receiver, subject, body, template_id, status, attempts, next_retry_at, last_error, sent_at)
+	VALUES (:id, :sender, :receiver, :subject, :body, :template_id, :status, :attempts, :next_retry_at, :last_error, :sent_at)
 	`
 	_, err := r.DB.NamedExecContext(ctx, query, email)
 	if err != nil {
@@ -69,7 +69,7 @@ func (r *emailRepository) FetchPending(ctx context.Context, limit int) ([]domain
 	SET status = 'processing'
 	FROM next_emails ne
 	WHERE e.id = ne.id
-	RETURNING e.id, e.sender, e.receiver, e.subject, e.body, e.is_html, e.html_template_id, e.status, e.attempts, e.next_retry_at, e.last_error, e.sent_at;
+	RETURNING e.id, e.sender, e.receiver, e.subject, e.body, e.template_id, e.status, e.attempts, e.next_retry_at, e.last_error, e.sent_at;
 	`
 	var emails []domain.Email
 	err := r.DB.SelectContext(ctx, &emails, query, limit)

@@ -229,7 +229,7 @@ func (h *GroupHandler) RemoveReceiver(w http.ResponseWriter, r *http.Request) er
 }
 
 type ListGroupReceiversResponse struct {
-	Receivers []domain.EmailReceiver `json:"receivers"`
+	Receivers []domain.Receiver `json:"receivers"`
 }
 
 func (h *GroupHandler) ListReceivers(w http.ResponseWriter, r *http.Request) error {

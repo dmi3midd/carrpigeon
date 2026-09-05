@@ -10,17 +10,17 @@ import (
 	"strconv"
 )
 
-type EmailReceiversHandler struct {
-	emailReceiverService service.EmailReceiverService
+type ReceiversHandler struct {
+	receiverService service.ReceiverService
 }
 
-func NewEmailReceiversHandler(emailReceiverService service.EmailReceiverService) *EmailReceiversHandler {
-	return &EmailReceiversHandler{
-		emailReceiverService: emailReceiverService,
+func NewReceiversHandler(receiverService service.ReceiverService) *ReceiversHandler {
+	return &ReceiversHandler{
+		receiverService: receiverService,
 	}
 }
 
-func (h *EmailReceiversHandler) RegisterRoutes(mux *http.ServeMux) {
+func (h *ReceiversHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /receivers/{id}", apierror.ErrorHandler(h.GetReceiverByIdHandler))
 	mux.HandleFunc("GET /receivers", apierror.ErrorHandler(h.ListReceiversHandler))
 	mux.HandleFunc("POST /receivers", apierror.ErrorHandler(h.CreateReceiverHandler))
@@ -29,17 +29,17 @@ func (h *EmailReceiversHandler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 type GetReceiverByIdResponse struct {
-	Receiver *domain.EmailReceiver `json:"receiver"`
+	Receiver *domain.Receiver `json:"receiver"`
 }
 
-func (h *EmailReceiversHandler) GetReceiverByIdHandler(w http.ResponseWriter, r *http.Request) error {
+func (h *ReceiversHandler) GetReceiverByIdHandler(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
 		return apierror.NewBadRequestError(errors.New("id is required"), "Id is required")
 	}
 
 	ctx := r.Context()
-	receiver, err := h.emailReceiverService.GetById(ctx, id)
+	receiver, err := h.receiverService.GetById(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -56,10 +56,10 @@ func (h *EmailReceiversHandler) GetReceiverByIdHandler(w http.ResponseWriter, r 
 }
 
 type ListReceiversResponse struct {
-	Receivers []*domain.EmailReceiver `json:"receivers"`
+	Receivers []*domain.Receiver `json:"receivers"`
 }
 
-func (h *EmailReceiversHandler) ListReceiversHandler(w http.ResponseWriter, r *http.Request) error {
+func (h *ReceiversHandler) ListReceiversHandler(w http.ResponseWriter, r *http.Request) error {
 	limit := 10
 	offset := 0
 
@@ -80,7 +80,7 @@ func (h *EmailReceiversHandler) ListReceiversHandler(w http.ResponseWriter, r *h
 	}
 
 	ctx := r.Context()
-	receivers, err := h.emailReceiverService.List(ctx, limit, offset)
+	receivers, err := h.receiverService.List(ctx, limit, offset)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ type CreateReceiverResponse struct {
 	ID string `json:"id"`
 }
 
-func (h *EmailReceiversHandler) CreateReceiverHandler(w http.ResponseWriter, r *http.Request) error {
+func (h *ReceiversHandler) CreateReceiverHandler(w http.ResponseWriter, r *http.Request) error {
 	var req CreateReceiverRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return err
@@ -113,7 +113,7 @@ func (h *EmailReceiversHandler) CreateReceiverHandler(w http.ResponseWriter, r *
 	defer r.Body.Close()
 
 	ctx := r.Context()
-	id, err := h.emailReceiverService.Create(ctx, req.Name, req.Email)
+	id, err := h.receiverService.Create(ctx, req.Name, req.Email)
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ type UpdateReceiverResponse struct {
 	ID string `json:"id"`
 }
 
-func (h *EmailReceiversHandler) UpdateReceiverHandler(w http.ResponseWriter, r *http.Request) error {
+func (h *ReceiversHandler) UpdateReceiverHandler(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
 		return apierror.NewBadRequestError(errors.New("id is required"), "Id is required")
@@ -150,7 +150,7 @@ func (h *EmailReceiversHandler) UpdateReceiverHandler(w http.ResponseWriter, r *
 	defer r.Body.Close()
 
 	ctx := r.Context()
-	receiverId, err := h.emailReceiverService.Update(ctx, id, req.Name, req.Email)
+	receiverId, err := h.receiverService.Update(ctx, id, req.Name, req.Email)
 	if err != nil {
 		return err
 	}
@@ -167,14 +167,14 @@ func (h *EmailReceiversHandler) UpdateReceiverHandler(w http.ResponseWriter, r *
 	return nil
 }
 
-func (h *EmailReceiversHandler) RemoveReceiverHandler(w http.ResponseWriter, r *http.Request) error {
+func (h *ReceiversHandler) RemoveReceiverHandler(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
 		return apierror.NewBadRequestError(errors.New("id is required"), "Id is required")
 	}
 
 	ctx := r.Context()
-	if err := h.emailReceiverService.Delete(ctx, id); err != nil {
+	if err := h.receiverService.Delete(ctx, id); err != nil {
 		return err
 	}
 

@@ -42,17 +42,17 @@ type GroupService interface {
 	RemoveReceiver(ctx context.Context, groupID, receiverID string) error
 	// ListReceivers returns a list of receivers in a group.
 	// Returns [ErrGroupNotFound] if no group is found
-	ListReceivers(ctx context.Context, groupID string, limit, offset int) ([]domain.EmailReceiver, error)
+	ListReceivers(ctx context.Context, groupID string, limit, offset int) ([]domain.Receiver, error)
 }
 
 type groupService struct {
 	groupRepo    repository.GroupRepository
-	receiverRepo repository.EmailReceiverRepository
+	receiverRepo repository.ReceiverRepository
 }
 
 func NewGroupService(
 	groupRepo repository.GroupRepository,
-	receiverRepo repository.EmailReceiverRepository,
+	receiverRepo repository.ReceiverRepository,
 ) GroupService {
 	return &groupService{
 		groupRepo:    groupRepo,
@@ -195,7 +195,7 @@ func (s *groupService) RemoveReceiver(ctx context.Context, groupID, receiverID s
 	return nil
 }
 
-func (s *groupService) ListReceivers(ctx context.Context, groupID string, limit, offset int) ([]domain.EmailReceiver, error) {
+func (s *groupService) ListReceivers(ctx context.Context, groupID string, limit, offset int) ([]domain.Receiver, error) {
 	op := "GroupService.ListReceivers"
 
 	if limit <= 0 {

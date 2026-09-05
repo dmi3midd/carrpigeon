@@ -9,13 +9,13 @@ import (
 )
 
 type Server struct {
-	cfg               *config.Config
-	middlewares       *middlewares.Middlewares
-	systemHandler     *handlers.SystemHandler
-	sendHandler       *handlers.SendHandler
-	receiversHandlers *handlers.EmailReceiversHandler
-	templateHandlers  *handlers.TemplateHandlers
-	groupHandler      *handlers.GroupHandler
+	cfg              *config.Config
+	middlewares      *middlewares.Middlewares
+	systemHandler    *handlers.SystemHandler
+	sendHandler      *handlers.SendHandler
+	receiversHandler *handlers.ReceiversHandler
+	templateHandler  *handlers.TemplateHandler
+	groupHandler     *handlers.GroupHandler
 }
 
 func NewServer(
@@ -23,18 +23,18 @@ func NewServer(
 	middlewares *middlewares.Middlewares,
 	systemHandler *handlers.SystemHandler,
 	sendHandler *handlers.SendHandler,
-	receiversHandlers *handlers.EmailReceiversHandler,
-	templateHandlers *handlers.TemplateHandlers,
+	receiversHandler *handlers.ReceiversHandler,
+	templateHandler *handlers.TemplateHandler,
 	groupHandler *handlers.GroupHandler,
 ) *http.Server {
 	s := &Server{
-		cfg:               cfg,
-		middlewares:       middlewares,
-		systemHandler:     systemHandler,
-		sendHandler:       sendHandler,
-		receiversHandlers: receiversHandlers,
-		templateHandlers:  templateHandlers,
-		groupHandler:      groupHandler,
+		cfg:              cfg,
+		middlewares:      middlewares,
+		systemHandler:    systemHandler,
+		sendHandler:      sendHandler,
+		receiversHandler: receiversHandler,
+		templateHandler:  templateHandler,
+		groupHandler:     groupHandler,
 	}
 
 	router := s.RegisterRoutes()

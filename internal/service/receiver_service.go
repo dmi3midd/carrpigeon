@@ -16,15 +16,15 @@ var (
 	ErrReceiverAlreadyExists = errors.New("receiver already exists")
 )
 
-type EmailReceiverService interface {
+type ReceiverService interface {
 	// GetById returns email receiver by id.
 	// Returns [ErrReceiverNotFound] if email receiver not found.
-	GetById(ctx context.Context, id string) (*domain.EmailReceiver, error)
+	GetById(ctx context.Context, id string) (*domain.Receiver, error)
 	// GetByEmail returns email receiver by email.
 	// Returns [ErrReceiverNotFound] if email receiver not found.
-	GetByEmail(ctx context.Context, email string) (*domain.EmailReceiver, error)
+	GetByEmail(ctx context.Context, email string) (*domain.Receiver, error)
 	// List returns list of email receivers with pagination.
-	List(ctx context.Context, limit, offset int) ([]*domain.EmailReceiver, error)
+	List(ctx context.Context, limit, offset int) ([]*domain.Receiver, error)
 	// Create creates email receiver in db.
 	Create(ctx context.Context, name, email string) (string, error)
 	// Update updates email receiver in db.
@@ -33,18 +33,18 @@ type EmailReceiverService interface {
 	Delete(ctx context.Context, id string) error
 }
 
-type emailReceiverService struct {
-	repo repository.EmailReceiverRepository
+type receiverService struct {
+	repo repository.ReceiverRepository
 }
 
-func NewEmailReceiverService(repo repository.EmailReceiverRepository) EmailReceiverService {
-	return &emailReceiverService{
+func NewReceiverService(repo repository.ReceiverRepository) ReceiverService {
+	return &receiverService{
 		repo: repo,
 	}
 }
 
-func (s *emailReceiverService) GetById(ctx context.Context, id string) (*domain.EmailReceiver, error) {
-	op := "EmailReceiverService.GetById"
+func (s *receiverService) GetById(ctx context.Context, id string) (*domain.Receiver, error) {
+	op := "ReceiverService.GetById"
 	receiver, err := s.repo.GetById(ctx, id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNoReceiver) {
@@ -55,8 +55,8 @@ func (s *emailReceiverService) GetById(ctx context.Context, id string) (*domain.
 	return receiver, nil
 }
 
-func (s *emailReceiverService) GetByEmail(ctx context.Context, email string) (*domain.EmailReceiver, error) {
-	op := "EmailReceiverService.GetByEmail"
+func (s *receiverService) GetByEmail(ctx context.Context, email string) (*domain.Receiver, error) {
+	op := "ReceiverService.GetByEmail"
 	receiver, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, repository.ErrNoReceiver) {
@@ -67,8 +67,8 @@ func (s *emailReceiverService) GetByEmail(ctx context.Context, email string) (*d
 	return receiver, nil
 }
 
-func (s *emailReceiverService) List(ctx context.Context, limit, offset int) ([]*domain.EmailReceiver, error) {
-	op := "EmailReceiverService.List"
+func (s *receiverService) List(ctx context.Context, limit, offset int) ([]*domain.Receiver, error) {
+	op := "ReceiverService.List"
 
 	if limit <= 0 {
 		limit = 10
@@ -84,8 +84,8 @@ func (s *emailReceiverService) List(ctx context.Context, limit, offset int) ([]*
 	return receivers, nil
 }
 
-func (s *emailReceiverService) Create(ctx context.Context, name, email string) (string, error) {
-	op := "EmailReceiverService.Create"
+func (s *receiverService) Create(ctx context.Context, name, email string) (string, error) {
+	op := "ReceiverService.Create"
 	candidate, err := s.repo.GetByEmail(ctx, email)
 	if err != nil && !errors.Is(err, repository.ErrNoReceiver) {
 		return "", fmt.Errorf("%s: %w", op, err)
@@ -93,7 +93,7 @@ func (s *emailReceiverService) Create(ctx context.Context, name, email string) (
 	if candidate != nil {
 		return "", fmt.Errorf("%s: %w", op, ErrReceiverAlreadyExists)
 	}
-	receiver := &domain.EmailReceiver{
+	receiver := &domain.Receiver{
 		ID:        xid.New().String(),
 		Name:      name,
 		Email:     email,
@@ -106,8 +106,8 @@ func (s *emailReceiverService) Create(ctx context.Context, name, email string) (
 	return receiver.ID, nil
 }
 
-func (s *emailReceiverService) Update(ctx context.Context, id, name, email string) (string, error) {
-	op := "EmailReceiverService.Update"
+func (s *receiverService) Update(ctx context.Context, id, name, email string) (string, error) {
+	op := "ReceiverService.Update"
 	candidate, err := s.repo.GetById(ctx, id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNoReceiver) {
@@ -115,7 +115,7 @@ func (s *emailReceiverService) Update(ctx context.Context, id, name, email strin
 		}
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
-	updatedReceiver := &domain.EmailReceiver{
+	updatedReceiver := &domain.Receiver{
 		ID:        candidate.ID,
 		Name:      name,
 		Email:     email,
@@ -128,8 +128,8 @@ func (s *emailReceiverService) Update(ctx context.Context, id, name, email strin
 	return updatedReceiver.ID, nil
 }
 
-func (s *emailReceiverService) Delete(ctx context.Context, id string) error {
-	op := "EmailReceiverService.Delete"
+func (s *receiverService) Delete(ctx context.Context, id string) error {
+	op := "ReceiverService.Delete"
 	if err := s.repo.Delete(ctx, id); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

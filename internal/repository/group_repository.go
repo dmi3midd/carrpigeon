@@ -37,7 +37,7 @@ type GroupRepository interface {
 	// RemoveReceiver removes a receiver from a group
 	RemoveReceiver(ctx context.Context, groupID, receiverID string) error
 	// ListReceivers returns a list of receivers in a group
-	ListReceivers(ctx context.Context, groupID string, limit, offset int) ([]domain.EmailReceiver, error)
+	ListReceivers(ctx context.Context, groupID string, limit, offset int) ([]domain.Receiver, error)
 }
 
 type groupRepository struct {
@@ -197,7 +197,7 @@ func (r *groupRepository) RemoveReceiver(ctx context.Context, groupID, receiverI
 	return nil
 }
 
-func (r *groupRepository) ListReceivers(ctx context.Context, groupID string, limit, offset int) ([]domain.EmailReceiver, error) {
+func (r *groupRepository) ListReceivers(ctx context.Context, groupID string, limit, offset int) ([]domain.Receiver, error) {
 	op := "GroupRepository.ListReceivers"
 	query := `
 		SELECT r.id, r.name, r.email, r.created_at, r.updated_at
@@ -206,7 +206,7 @@ func (r *groupRepository) ListReceivers(ctx context.Context, groupID string, lim
 		WHERE gr.group_id = $1
 		LIMIT $2 OFFSET $3
 	`
-	var receivers []domain.EmailReceiver
+	var receivers []domain.Receiver
 	err := r.DB.SelectContext(ctx, &receivers, query, groupID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)

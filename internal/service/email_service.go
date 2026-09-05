@@ -33,15 +33,15 @@ type emailService struct {
 	config          *config.SMTP
 	client          client.EmailClient
 	emailRepo       repository.EmailRepository
-	receiverRepo    repository.EmailReceiverRepository
-	templateService HTMLTemplateService
+	receiverRepo    repository.ReceiverRepository
+	templateService TemplateService
 }
 
 func NewEmailService(
 	client client.EmailClient,
 	emailRepo repository.EmailRepository,
-	receiverRepo repository.EmailReceiverRepository,
-	templateService HTMLTemplateService,
+	receiverRepo repository.ReceiverRepository,
+	templateService TemplateService,
 	cfg *config.SMTP,
 ) EmailService {
 	return &emailService{
@@ -69,7 +69,6 @@ func (s *emailService) Send(ctx context.Context, to, subject, body string) error
 		Receiver:    to,
 		Subject:     subject,
 		Body:        body,
-		IsHTML:      false,
 		Status:      domain.StatusPending,
 		Attempts:    0,
 		NextRetryAt: nil,
@@ -93,28 +92,41 @@ func (s *emailService) SendWithTemplate(ctx context.Context, to, subject, templa
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	tmpl, err := s.templateService.GetParsed(ctx, templateId)
+	tmplMeta, err := s.templateService.GetMetadata(ctx, templateId)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	var body bytes.Buffer
-	if err := tmpl.Execute(&body, data); err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+	if tmplMeta.IsHTML {
+		tmpl, err := s.templateService.GetParsedHTML(ctx, templateId)
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+		if err := tmpl.Execute(&body, data); err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+	} else {
+		tmpl, err := s.templateService.GetParsedTxt(ctx, templateId)
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+		if err := tmpl.Execute(&body, data); err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
 	}
 
 	email := domain.Email{
-		ID:             xid.New().String(),
-		Sender:         s.config.User,
-		Receiver:       to,
-		Subject:        subject,
-		Body:           body.String(),
-		IsHTML:         true,
-		HTMLTemplateID: &templateId,
-		Status:         domain.StatusPending,
-		Attempts:       0,
-		NextRetryAt:    nil,
-		SentAt:         nil,
+		ID:          xid.New().String(),
+		Sender:      s.config.User,
+		Receiver:    to,
+		Subject:     subject,
+		Body:        body.String(),
+		TemplateID:  &templateId,
+		Status:      domain.StatusPending,
+		Attempts:    0,
+		NextRetryAt: nil,
+		SentAt:      nil,
 	}
 
 	if err := s.emailRepo.Create(ctx, &email); err != nil {

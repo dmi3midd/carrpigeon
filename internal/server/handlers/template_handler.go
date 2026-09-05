@@ -10,27 +10,27 @@ import (
 	"strconv"
 )
 
-type TemplateHandlers struct {
-	templateService service.HTMLTemplateService
+type TemplateHandler struct {
+	templateService service.TemplateService
 }
 
-func NewTemplateHandlers(templateService service.HTMLTemplateService) *TemplateHandlers {
-	return &TemplateHandlers{templateService: templateService}
+func NewTemplateHandler(templateService service.TemplateService) *TemplateHandler {
+	return &TemplateHandler{templateService: templateService}
 }
 
-func (h *TemplateHandlers) RegisterRoutes(mux *http.ServeMux) {
+func (h *TemplateHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /templates/{id}", apierror.ErrorHandler(h.GetTemplateRawHandler))
 	mux.HandleFunc("GET /templates", apierror.ErrorHandler(h.ListTemplateMetadataHandler))
-	mux.HandleFunc("POST /templates", apierror.ErrorHandler(h.CreateHTMLTemplateHandler))
-	mux.HandleFunc("PUT /templates/{id}", apierror.ErrorHandler(h.UpdateHTMLTemplateHandler))
-	mux.HandleFunc("DELETE /templates/{id}", apierror.ErrorHandler(h.RemoveHTMLTemplateHandler))
+	mux.HandleFunc("POST /templates", apierror.ErrorHandler(h.CreateTemplateHandler))
+	mux.HandleFunc("PUT /templates/{id}", apierror.ErrorHandler(h.UpdateTemplateHandler))
+	mux.HandleFunc("DELETE /templates/{id}", apierror.ErrorHandler(h.RemoveTemplateHandler))
 }
 
 type GetTemplateRawResponse struct {
-	Template *domain.HTMLTemplate `json:"template"`
+	Template *domain.Template `json:"template"`
 }
 
-func (h *TemplateHandlers) GetTemplateRawHandler(w http.ResponseWriter, r *http.Request) error {
+func (h *TemplateHandler) GetTemplateRawHandler(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
 		return apierror.NewBadRequestError(errors.New("id is required"), "Id is required")
@@ -53,7 +53,11 @@ func (h *TemplateHandlers) GetTemplateRawHandler(w http.ResponseWriter, r *http.
 	return nil
 }
 
-func (h *TemplateHandlers) ListTemplateMetadataHandler(w http.ResponseWriter, r *http.Request) error {
+type ListTemplateMetadataResponse struct {
+	Templates []domain.TemplateMetadata `json:"templates"`
+}
+
+func (h *TemplateHandler) ListTemplateMetadataHandler(w http.ResponseWriter, r *http.Request) error {
 	limit := 10
 	offset := 0
 
@@ -74,31 +78,34 @@ func (h *TemplateHandlers) ListTemplateMetadataHandler(w http.ResponseWriter, r 
 	}
 
 	ctx := r.Context()
-	templates, err := h.templateService.List(ctx, limit, offset)
+	templates, err := h.templateService.ListMetadata(ctx, limit, offset)
 	if err != nil {
 		return err
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(templates); err != nil {
+	response := &ListTemplateMetadataResponse{
+		Templates: templates,
+	}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-type CreateHTMLTemplateResponse struct {
+type CreateTemplateResponse struct {
 	ID string `json:"id"`
 }
 
-func (h *TemplateHandlers) CreateHTMLTemplateHandler(w http.ResponseWriter, r *http.Request) error {
+func (h *TemplateHandler) CreateTemplateHandler(w http.ResponseWriter, r *http.Request) error {
 	r.Body = http.MaxBytesReader(w, r.Body, 512<<10)
 
 	if err := r.ParseMultipartForm(256 << 10); err != nil {
 		return err
 	}
-	file, _, err := r.FormFile("file")
+	file, header, err := r.FormFile("file")
 	name := r.FormValue("name")
 	if err != nil {
 		return err
@@ -109,14 +116,14 @@ func (h *TemplateHandlers) CreateHTMLTemplateHandler(w http.ResponseWriter, r *h
 	defer file.Close()
 
 	ctx := r.Context()
-	id, err := h.templateService.Save(ctx, name, file)
+	id, err := h.templateService.Save(ctx, name, file, header.Filename)
 	if err != nil {
 		return err
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
-	response := &CreateHTMLTemplateResponse{ID: id}
+	response := &CreateTemplateResponse{ID: id}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		return err
 	}
@@ -124,11 +131,11 @@ func (h *TemplateHandlers) CreateHTMLTemplateHandler(w http.ResponseWriter, r *h
 	return nil
 }
 
-type UpdateHTMLTemplateResponse struct {
+type UpdateTemplateResponse struct {
 	ID string `json:"id"`
 }
 
-func (h *TemplateHandlers) UpdateHTMLTemplateHandler(w http.ResponseWriter, r *http.Request) error {
+func (h *TemplateHandler) UpdateTemplateHandler(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
 		return apierror.NewBadRequestError(errors.New("id is required"), "Id is required")
@@ -139,7 +146,7 @@ func (h *TemplateHandlers) UpdateHTMLTemplateHandler(w http.ResponseWriter, r *h
 	if err := r.ParseMultipartForm(256 << 10); err != nil {
 		return err
 	}
-	file, _, err := r.FormFile("file")
+	file, header, err := r.FormFile("file")
 	name := r.FormValue("name")
 	if err != nil {
 		return err
@@ -150,14 +157,14 @@ func (h *TemplateHandlers) UpdateHTMLTemplateHandler(w http.ResponseWriter, r *h
 	defer file.Close()
 
 	ctx := r.Context()
-	tmplId, err := h.templateService.Update(ctx, id, name, file)
+	tmplId, err := h.templateService.Update(ctx, id, name, file, header.Filename)
 	if err != nil {
 		return err
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	response := &UpdateHTMLTemplateResponse{ID: tmplId}
+	response := &UpdateTemplateResponse{ID: tmplId}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		return err
 	}
@@ -165,7 +172,7 @@ func (h *TemplateHandlers) UpdateHTMLTemplateHandler(w http.ResponseWriter, r *h
 	return nil
 }
 
-func (h *TemplateHandlers) RemoveHTMLTemplateHandler(w http.ResponseWriter, r *http.Request) error {
+func (h *TemplateHandler) RemoveTemplateHandler(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
 		return apierror.NewBadRequestError(errors.New("ID is required"), "ID is required")

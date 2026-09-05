@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE email_receivers (
+CREATE TABLE receivers (
     id VARCHAR(20) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -8,4 +8,4 @@ CREATE TABLE email_receivers (
 );
 
 -- +goose Down
-DROP TABLE IF EXISTS email_receivers;
+DROP TABLE IF EXISTS receivers;

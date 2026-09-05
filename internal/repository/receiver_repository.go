@@ -14,36 +14,36 @@ var (
 	ErrNoReceiver = errors.New("receiver not found")
 )
 
-type EmailReceiverRepository interface {
+type ReceiverRepository interface {
 	// GetById returns email receiver by id.
 	// Returns [ErrNoReceiver] if email receiver not found.
-	GetById(ctx context.Context, id string) (*domain.EmailReceiver, error)
+	GetById(ctx context.Context, id string) (*domain.Receiver, error)
 	// GetByEmail returns email receiver by email.
 	// Returns [ErrNoReceiver] if email receiver not found.
-	GetByEmail(ctx context.Context, email string) (*domain.EmailReceiver, error)
+	GetByEmail(ctx context.Context, email string) (*domain.Receiver, error)
 	// List returns list of email receivers with pagination.
-	List(ctx context.Context, limit, offset int) ([]*domain.EmailReceiver, error)
+	List(ctx context.Context, limit, offset int) ([]*domain.Receiver, error)
 	// Create creates email receiver in db.
-	Create(ctx context.Context, receiver *domain.EmailReceiver) error
+	Create(ctx context.Context, receiver *domain.Receiver) error
 	// Update updates email receiver in db.
-	Update(ctx context.Context, receiver *domain.EmailReceiver) error
+	Update(ctx context.Context, receiver *domain.Receiver) error
 	// Delete deletes email receiver from db.
 	Delete(ctx context.Context, id string) error
 }
 
-type emailReceiverRepository struct {
+type receiverRepository struct {
 	db *sqlx.DB
 }
 
-func NewEmailReceiverRepository(db *sqlx.DB) EmailReceiverRepository {
-	return &emailReceiverRepository{
+func NewReceiverRepository(db *sqlx.DB) ReceiverRepository {
+	return &receiverRepository{
 		db: db,
 	}
 }
 
-func (r *emailReceiverRepository) GetById(ctx context.Context, id string) (*domain.EmailReceiver, error) {
-	op := "EmailReceiverRepository.GetById"
-	var receiver domain.EmailReceiver
+func (r *receiverRepository) GetById(ctx context.Context, id string) (*domain.Receiver, error) {
+	op := "ReceiverRepository.GetById"
+	var receiver domain.Receiver
 	query := `
 		SELECT id, name, email, created_at, updated_at
 		FROM email_receivers
@@ -59,9 +59,9 @@ func (r *emailReceiverRepository) GetById(ctx context.Context, id string) (*doma
 	return &receiver, nil
 }
 
-func (r *emailReceiverRepository) GetByEmail(ctx context.Context, email string) (*domain.EmailReceiver, error) {
-	op := "EmailReceiverRepository.GetByEmail"
-	var receiver domain.EmailReceiver
+func (r *receiverRepository) GetByEmail(ctx context.Context, email string) (*domain.Receiver, error) {
+	op := "ReceiverRepository.GetByEmail"
+	var receiver domain.Receiver
 	query := `
 		SELECT id, name, email, created_at, updated_at
 		FROM email_receivers
@@ -77,9 +77,9 @@ func (r *emailReceiverRepository) GetByEmail(ctx context.Context, email string) 
 	return &receiver, nil
 }
 
-func (r *emailReceiverRepository) List(ctx context.Context, limit, offset int) ([]*domain.EmailReceiver, error) {
-	op := "EmailReceiverRepository.List"
-	receivers := make([]*domain.EmailReceiver, 0)
+func (r *receiverRepository) List(ctx context.Context, limit, offset int) ([]*domain.Receiver, error) {
+	op := "ReceiverRepository.List"
+	receivers := make([]*domain.Receiver, 0)
 	query := `
 		SELECT id, name, email, created_at, updated_at
 		FROM email_receivers
@@ -92,8 +92,8 @@ func (r *emailReceiverRepository) List(ctx context.Context, limit, offset int) (
 	return receivers, nil
 }
 
-func (r *emailReceiverRepository) Create(ctx context.Context, receiver *domain.EmailReceiver) error {
-	op := "EmailReceiverRepository.Create"
+func (r *receiverRepository) Create(ctx context.Context, receiver *domain.Receiver) error {
+	op := "ReceiverRepository.Create"
 	query := `
 		INSERT INTO email_receivers (id, name, email, created_at, updated_at)
 		VALUES (:id, :name, :email, :created_at, :updated_at)
@@ -105,8 +105,8 @@ func (r *emailReceiverRepository) Create(ctx context.Context, receiver *domain.E
 	return nil
 }
 
-func (r *emailReceiverRepository) Update(ctx context.Context, receiver *domain.EmailReceiver) error {
-	op := "EmailReceiverRepository.Update"
+func (r *receiverRepository) Update(ctx context.Context, receiver *domain.Receiver) error {
+	op := "ReceiverRepository.Update"
 	query := `
 		UPDATE email_receivers
 		SET name = :name, email = :email, updated_at = :updated_at
@@ -119,8 +119,8 @@ func (r *emailReceiverRepository) Update(ctx context.Context, receiver *domain.E
 	return nil
 }
 
-func (r *emailReceiverRepository) Delete(ctx context.Context, id string) error {
-	op := "EmailReceiverRepository.Delete"
+func (r *receiverRepository) Delete(ctx context.Context, id string) error {
+	op := "ReceiverRepository.Delete"
 	query := `
 		DELETE FROM email_receivers
 		WHERE id = $1
