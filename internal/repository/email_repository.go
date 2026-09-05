@@ -20,7 +20,6 @@ type EmailRepository interface {
 	// Create creates email in db.
 	// Returns [ErrFailedToCreateEmail] if failed to create email.
 	Create(ctx context.Context, email *domain.Email) error
-
 	// FetchPending selects pending emails ready for sending, marks them as 'processing' and returns them.
 	// Uses FOR UPDATE SKIP LOCKED to ensure concurrency safety.
 	FetchPending(ctx context.Context, limit int) ([]domain.Email, error)
@@ -43,8 +42,8 @@ func NewEmailRepository(db *sqlx.DB) EmailRepository {
 func (r *emailRepository) Create(ctx context.Context, email *domain.Email) error {
 	op := "EmailRepository.Create"
 	query := `
-	INSERT INTO emails (id, sender, receiver, subject, body, template_id, status, attempts, next_retry_at, last_error, sent_at)
-	VALUES (:id, :sender, :receiver, :subject, :body, :template_id, :status, :attempts, :next_retry_at, :last_error, :sent_at)
+	INSERT INTO emails (id, sender, receiver_id, receiver_email, subject, body, template_id, status, attempts, next_retry_at, last_error, sent_at)
+	VALUES (:id, :sender, :receiver_id, :receiver_email, :subject, :body, :template_id, :status, :attempts, :next_retry_at, :last_error, :sent_at)
 	`
 	_, err := r.DB.NamedExecContext(ctx, query, email)
 	if err != nil {
@@ -69,7 +68,7 @@ func (r *emailRepository) FetchPending(ctx context.Context, limit int) ([]domain
 	SET status = 'processing'
 	FROM next_emails ne
 	WHERE e.id = ne.id
-	RETURNING e.id, e.sender, e.receiver, e.subject, e.body, e.template_id, e.status, e.attempts, e.next_retry_at, e.last_error, e.sent_at;
+	RETURNING e.id, e.sender, e.receiver_id, e.receiver_email, e.subject, e.body, e.template_id, e.status, e.attempts, e.next_retry_at, e.last_error, e.sent_at;
 	`
 	var emails []domain.Email
 	err := r.DB.SelectContext(ctx, &emails, query, limit)

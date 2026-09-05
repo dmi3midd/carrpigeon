@@ -56,7 +56,8 @@ func NewEmailService(
 func (s *emailService) Send(ctx context.Context, to, subject, body string) error {
 	op := "EmailService.Send"
 
-	if _, err := s.receiverRepo.GetByEmail(ctx, to); err != nil {
+	r, err := s.receiverRepo.GetByEmail(ctx, to)
+	if err != nil {
 		if errors.Is(err, repository.ErrNoReceiver) {
 			return fmt.Errorf("%s: %w", op, ErrReceiverNotFound)
 		}
@@ -64,15 +65,17 @@ func (s *emailService) Send(ctx context.Context, to, subject, body string) error
 	}
 
 	email := domain.Email{
-		ID:          xid.New().String(),
-		Sender:      s.config.User,
-		Receiver:    to,
-		Subject:     subject,
-		Body:        body,
-		Status:      domain.StatusPending,
-		Attempts:    0,
-		NextRetryAt: nil,
-		SentAt:      nil,
+		ID:            xid.New().String(),
+		Sender:        s.config.User,
+		ReceiverID:    r.ID,
+		ReceiverEmail: r.Email,
+		Subject:       subject,
+		Body:          body,
+		Status:        domain.StatusPending,
+		Attempts:      0,
+		NextRetryAt:   nil,
+		LastError:     nil,
+		SentAt:        nil,
 	}
 
 	if err := s.emailRepo.Create(ctx, &email); err != nil {
@@ -85,7 +88,8 @@ func (s *emailService) Send(ctx context.Context, to, subject, body string) error
 func (s *emailService) SendWithTemplate(ctx context.Context, to, subject, templateId string, data interface{}) error {
 	op := "EmailService.SendWithTemplate"
 
-	if _, err := s.receiverRepo.GetByEmail(ctx, to); err != nil {
+	r, err := s.receiverRepo.GetByEmail(ctx, to)
+	if err != nil {
 		if errors.Is(err, repository.ErrNoReceiver) {
 			return fmt.Errorf("%s: %w", op, ErrReceiverNotFound)
 		}
@@ -117,16 +121,18 @@ func (s *emailService) SendWithTemplate(ctx context.Context, to, subject, templa
 	}
 
 	email := domain.Email{
-		ID:          xid.New().String(),
-		Sender:      s.config.User,
-		Receiver:    to,
-		Subject:     subject,
-		Body:        body.String(),
-		TemplateID:  &templateId,
-		Status:      domain.StatusPending,
-		Attempts:    0,
-		NextRetryAt: nil,
-		SentAt:      nil,
+		ID:            xid.New().String(),
+		Sender:        s.config.User,
+		ReceiverID:    r.ID,
+		ReceiverEmail: r.Email,
+		Subject:       subject,
+		Body:          body.String(),
+		TemplateID:    &templateId,
+		Status:        domain.StatusPending,
+		Attempts:      0,
+		NextRetryAt:   nil,
+		LastError:     nil,
+		SentAt:        nil,
 	}
 
 	if err := s.emailRepo.Create(ctx, &email); err != nil {

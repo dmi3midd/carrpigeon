@@ -38,7 +38,7 @@ func NewEmailClient(cfg *config.SMTP) EmailClient {
 func (c *emailClient) buildMessage(email *domain.Email) *mail.Message {
 	msg := mail.NewMessage()
 	msg.SetHeader("From", c.config.User)
-	msg.SetHeader("To", email.Receiver)
+	msg.SetHeader("To", email.ReceiverEmail)
 	msg.SetHeader("Subject", email.Subject)
 	contentType := "text/plain"
 	detected := http.DetectContentType([]byte(email.Body))

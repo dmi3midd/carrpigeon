@@ -135,7 +135,7 @@ func (w *emailWorker) processEmail(ctx context.Context, email domain.Email) {
 		if updateErr := w.emailRepo.MarkAsSent(ctx, email.ID, now); updateErr != nil {
 			slog.Error("failed to mark email as sent in db", slog.String("id", email.ID), slog.String("error", updateErr.Error()))
 		} else {
-			slog.Info("email sent successfully", slog.String("id", email.ID), slog.String("receiver", email.Receiver))
+			slog.Info("email sent successfully", slog.String("id", email.ID), slog.String("receiver", email.ReceiverEmail))
 		}
 		if w.emailCache != nil {
 			w.emailCache.Del(email.ID)
@@ -143,7 +143,7 @@ func (w *emailWorker) processEmail(ctx context.Context, email domain.Email) {
 		return
 	}
 
-	slog.Error("failed to send email", slog.String("id", email.ID), slog.String("receiver", email.Receiver), slog.String("error", err.Error()))
+	slog.Error("failed to send email", slog.String("id", email.ID), slog.String("receiver", email.ReceiverEmail), slog.String("error", err.Error()))
 
 	nextAttempts := email.Attempts + 1
 	var nextRetryAt *time.Time
