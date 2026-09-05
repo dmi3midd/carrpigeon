@@ -43,13 +43,14 @@ func NewReceiverRepository(db *sqlx.DB) ReceiverRepository {
 
 func (r *receiverRepository) GetById(ctx context.Context, id string) (*domain.Receiver, error) {
 	op := "ReceiverRepository.GetById"
-	var receiver domain.Receiver
 	query := `
 		SELECT id, name, email, created_at, updated_at
-		FROM email_receivers
+		FROM receivers
 		WHERE id = $1
 	`
-	err := r.db.GetContext(ctx, &receiver, query, id)
+	executor := ExtractTx(ctx, r.db)
+	var receiver domain.Receiver
+	err := sqlx.GetContext(ctx, executor, &receiver, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("%s: %w", op, ErrNoReceiver)
@@ -61,13 +62,14 @@ func (r *receiverRepository) GetById(ctx context.Context, id string) (*domain.Re
 
 func (r *receiverRepository) GetByEmail(ctx context.Context, email string) (*domain.Receiver, error) {
 	op := "ReceiverRepository.GetByEmail"
-	var receiver domain.Receiver
 	query := `
 		SELECT id, name, email, created_at, updated_at
-		FROM email_receivers
+		FROM receivers
 		WHERE email = $1
 	`
-	err := r.db.GetContext(ctx, &receiver, query, email)
+	executor := ExtractTx(ctx, r.db)
+	var receiver domain.Receiver
+	err := sqlx.GetContext(ctx, executor, &receiver, query, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("%s: %w", op, ErrNoReceiver)
@@ -79,13 +81,14 @@ func (r *receiverRepository) GetByEmail(ctx context.Context, email string) (*dom
 
 func (r *receiverRepository) List(ctx context.Context, limit, offset int) ([]*domain.Receiver, error) {
 	op := "ReceiverRepository.List"
-	receivers := make([]*domain.Receiver, 0)
 	query := `
 		SELECT id, name, email, created_at, updated_at
-		FROM email_receivers
+		FROM receivers
 		LIMIT $1 OFFSET $2
 	`
-	err := r.db.SelectContext(ctx, &receivers, query, limit, offset)
+	executor := ExtractTx(ctx, r.db)
+	receivers := make([]*domain.Receiver, 0)
+	err := sqlx.SelectContext(ctx, executor, &receivers, query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -95,10 +98,11 @@ func (r *receiverRepository) List(ctx context.Context, limit, offset int) ([]*do
 func (r *receiverRepository) Create(ctx context.Context, receiver *domain.Receiver) error {
 	op := "ReceiverRepository.Create"
 	query := `
-		INSERT INTO email_receivers (id, name, email, created_at, updated_at)
+		INSERT INTO receivers (id, name, email, created_at, updated_at)
 		VALUES (:id, :name, :email, :created_at, :updated_at)
 	`
-	_, err := r.db.NamedExecContext(ctx, query, receiver)
+	executor := ExtractTx(ctx, r.db)
+	_, err := sqlx.NamedExecContext(ctx, executor, query, receiver)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -108,11 +112,12 @@ func (r *receiverRepository) Create(ctx context.Context, receiver *domain.Receiv
 func (r *receiverRepository) Update(ctx context.Context, receiver *domain.Receiver) error {
 	op := "ReceiverRepository.Update"
 	query := `
-		UPDATE email_receivers
+		UPDATE receivers
 		SET name = :name, email = :email, updated_at = :updated_at
 		WHERE id = :id
 	`
-	_, err := r.db.NamedExecContext(ctx, query, receiver)
+	executor := ExtractTx(ctx, r.db)
+	_, err := sqlx.NamedExecContext(ctx, executor, query, receiver)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -122,10 +127,11 @@ func (r *receiverRepository) Update(ctx context.Context, receiver *domain.Receiv
 func (r *receiverRepository) Delete(ctx context.Context, id string) error {
 	op := "ReceiverRepository.Delete"
 	query := `
-		DELETE FROM email_receivers
+		DELETE FROM receivers
 		WHERE id = $1
 	`
-	_, err := r.db.ExecContext(ctx, query, id)
+	executor := ExtractTx(ctx, r.db)
+	_, err := executor.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

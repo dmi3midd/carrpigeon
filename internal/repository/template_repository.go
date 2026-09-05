@@ -46,13 +46,14 @@ func NewTemplateRepository(db *sqlx.DB) TemplateRepository {
 
 func (r *templateRepository) GetByID(ctx context.Context, id string) (*domain.Template, error) {
 	op := "TemplateRepository.GetByID"
-	var tmpl domain.Template
 	query := `
 	SELECT id, name, content, is_html, fields, created_at, updated_at
 	FROM templates
 	WHERE id = $1
 	`
-	err := r.db.GetContext(ctx, &tmpl, query, id)
+	executor := ExtractTx(ctx, r.db)
+	var tmpl domain.Template
+	err := sqlx.GetContext(ctx, executor, &tmpl, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("%s: %w", op, ErrNoTemplate)
@@ -64,14 +65,15 @@ func (r *templateRepository) GetByID(ctx context.Context, id string) (*domain.Te
 
 func (r *templateRepository) GetMetadataByID(ctx context.Context, id string) (*domain.TemplateMetadata, error) {
 	op := "TemplateRepository.GetMetadataByID"
-	var meta domain.TemplateMetadata
-
 	query := `
         SELECT id, name, is_html, fields, created_at, updated_at
         FROM templates
         WHERE id = $1
     `
-	if err := r.db.GetContext(ctx, &meta, query, id); err != nil {
+	executor := ExtractTx(ctx, r.db)
+	var meta domain.TemplateMetadata
+	err := sqlx.GetContext(ctx, executor, &meta, query, id)
+	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("%s: %w", op, ErrNoTemplate)
 		}
@@ -82,14 +84,15 @@ func (r *templateRepository) GetMetadataByID(ctx context.Context, id string) (*d
 
 func (r *templateRepository) GetMetadataByName(ctx context.Context, name string) (*domain.TemplateMetadata, error) {
 	op := "TemplateRepository.GetMetadataByName"
-	var meta domain.TemplateMetadata
-
 	query := `
         SELECT id, name, is_html, fields, created_at, updated_at
         FROM templates
         WHERE name = $1
     `
-	if err := r.db.GetContext(ctx, &meta, query, name); err != nil {
+	executor := ExtractTx(ctx, r.db)
+	var meta domain.TemplateMetadata
+	err := sqlx.GetContext(ctx, executor, &meta, query, name)
+	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("%s: %w", op, ErrNoTemplate)
 		}
@@ -100,14 +103,15 @@ func (r *templateRepository) GetMetadataByName(ctx context.Context, name string)
 
 func (r *templateRepository) List(ctx context.Context, limit, offset int) ([]domain.TemplateMetadata, error) {
 	op := "TemplateRepository.List"
-	templates := make([]domain.TemplateMetadata, 0)
 	query := `
 	SELECT id, name, is_html, fields, created_at, updated_at
 	FROM templates
 	ORDER BY created_at DESC
 	LIMIT $1 OFFSET $2
 	`
-	err := r.db.SelectContext(ctx, &templates, query, limit, offset)
+	executor := ExtractTx(ctx, r.db)
+	templates := make([]domain.TemplateMetadata, 0)
+	err := sqlx.SelectContext(ctx, executor, &templates, query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -120,7 +124,8 @@ func (r *templateRepository) Create(ctx context.Context, template *domain.Templa
 	INSERT INTO templates (id, name, content, is_html, fields, created_at, updated_at)
 	VALUES (:id, :name, :content, :is_html, :fields, :created_at, :updated_at)
 	`
-	_, err := r.db.NamedExecContext(ctx, query, template)
+	executor := ExtractTx(ctx, r.db)
+	_, err := sqlx.NamedExecContext(ctx, executor, query, template)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -134,7 +139,8 @@ func (r *templateRepository) Update(ctx context.Context, template *domain.Templa
 	SET name = :name, content = :content, is_html = :is_html, fields = :fields, updated_at = :updated_at
 	WHERE id = :id
 	`
-	_, err := r.db.NamedExecContext(ctx, query, template)
+	executor := ExtractTx(ctx, r.db)
+	_, err := sqlx.NamedExecContext(ctx, executor, query, template)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -147,7 +153,8 @@ func (r *templateRepository) Delete(ctx context.Context, id string) error {
 	DELETE FROM templates
 	WHERE id = $1
 	`
-	_, err := r.db.ExecContext(ctx, query, id)
+	executor := ExtractTx(ctx, r.db)
+	_, err := executor.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

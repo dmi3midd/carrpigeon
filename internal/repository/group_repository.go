@@ -61,8 +61,9 @@ func (r *groupRepository) GetByID(ctx context.Context, id string) (*domain.Group
 		WHERE g.id = $1
 		GROUP BY g.id
 	`
+	executor := ExtractTx(ctx, r.DB)
 	var group domain.Group
-	err := r.DB.GetContext(ctx, &group, query, id)
+	err := sqlx.GetContext(ctx, executor, &group, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("%s: %w", op, ErrNoGroup)
@@ -83,8 +84,9 @@ func (r *groupRepository) GetByName(ctx context.Context, name string) (*domain.G
 		WHERE g.name = $1
 		GROUP BY g.id
 	`
+	executor := ExtractTx(ctx, r.DB)
 	var group domain.Group
-	err := r.DB.GetContext(ctx, &group, query, name)
+	err := sqlx.GetContext(ctx, executor, &group, query, name)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("%s: %w", op, ErrNoGroup)
@@ -106,8 +108,9 @@ func (r *groupRepository) List(ctx context.Context, limit, offset int) ([]domain
 		ORDER BY g.created_at DESC
 		LIMIT $1 OFFSET $2
 	`
+	executor := ExtractTx(ctx, r.DB)
 	var groups []domain.Group
-	err := r.DB.SelectContext(ctx, &groups, query, limit, offset)
+	err := sqlx.SelectContext(ctx, executor, &groups, query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -120,7 +123,8 @@ func (r *groupRepository) Create(ctx context.Context, group *domain.Group) error
 		INSERT INTO groups (id, name, description, created_at, updated_at)
 		VALUES (:id, :name, :description, :created_at, :updated_at)
 	`
-	_, err := r.DB.NamedExecContext(ctx, query, group)
+	executor := ExtractTx(ctx, r.DB)
+	_, err := sqlx.NamedExecContext(ctx, executor, query, group)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -134,7 +138,8 @@ func (r *groupRepository) Update(ctx context.Context, group *domain.Group) error
 		SET name = :name, description = :description, updated_at = :updated_at
 		WHERE id = :id
 	`
-	_, err := r.DB.NamedExecContext(ctx, query, group)
+	executor := ExtractTx(ctx, r.DB)
+	_, err := sqlx.NamedExecContext(ctx, executor, query, group)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -147,7 +152,8 @@ func (r *groupRepository) Delete(ctx context.Context, id string) error {
 		DELETE FROM groups
 		WHERE id = $1
 	`
-	_, err := r.DB.ExecContext(ctx, query, id)
+	executor := ExtractTx(ctx, r.DB)
+	_, err := executor.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -163,8 +169,9 @@ func (r *groupRepository) IsReceiverInGroup(ctx context.Context, groupID, receiv
 			WHERE group_id = $1 AND receiver_id = $2
 		)
 	`
+	executor := ExtractTx(ctx, r.DB)
 	var exists bool
-	err := r.DB.GetContext(ctx, &exists, query, groupID, receiverID)
+	err := sqlx.GetContext(ctx, executor, &exists, query, groupID, receiverID)
 	if err != nil {
 		return false, fmt.Errorf("%s: %w", op, err)
 	}
@@ -177,7 +184,8 @@ func (r *groupRepository) AddReceiver(ctx context.Context, groupID, receiverID s
 		INSERT INTO groups_receivers (group_id, receiver_id)
 		VALUES ($1, $2)
 	`
-	_, err := r.DB.ExecContext(ctx, query, groupID, receiverID)
+	executor := ExtractTx(ctx, r.DB)
+	_, err := executor.ExecContext(ctx, query, groupID, receiverID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -190,7 +198,8 @@ func (r *groupRepository) RemoveReceiver(ctx context.Context, groupID, receiverI
 		DELETE FROM groups_receivers
 		WHERE group_id = $1 AND receiver_id = $2
 	`
-	_, err := r.DB.ExecContext(ctx, query, groupID, receiverID)
+	executor := ExtractTx(ctx, r.DB)
+	_, err := executor.ExecContext(ctx, query, groupID, receiverID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -201,13 +210,14 @@ func (r *groupRepository) ListReceivers(ctx context.Context, groupID string, lim
 	op := "GroupRepository.ListReceivers"
 	query := `
 		SELECT r.id, r.name, r.email, r.created_at, r.updated_at
-		FROM email_receivers r
+		FROM receivers r
 		JOIN groups_receivers gr ON r.id = gr.receiver_id
 		WHERE gr.group_id = $1
 		LIMIT $2 OFFSET $3
 	`
+	executor := ExtractTx(ctx, r.DB)
 	var receivers []domain.Receiver
-	err := r.DB.SelectContext(ctx, &receivers, query, groupID, limit, offset)
+	err := sqlx.SelectContext(ctx, executor, &receivers, query, groupID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

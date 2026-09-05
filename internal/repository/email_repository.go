@@ -45,7 +45,8 @@ func (r *emailRepository) Create(ctx context.Context, email *domain.Email) error
 	INSERT INTO emails (id, sender, receiver_id, receiver_email, subject, body, template_id, status, attempts, next_retry_at, last_error, sent_at)
 	VALUES (:id, :sender, :receiver_id, :receiver_email, :subject, :body, :template_id, :status, :attempts, :next_retry_at, :last_error, :sent_at)
 	`
-	_, err := r.DB.NamedExecContext(ctx, query, email)
+	executor := ExtractTx(ctx, r.DB)
+	_, err := sqlx.NamedExecContext(ctx, executor, query, email)
 	if err != nil {
 		return fmt.Errorf("%s: %w: %w", op, ErrFailedToCreateEmail, err)
 	}
@@ -70,8 +71,9 @@ func (r *emailRepository) FetchPending(ctx context.Context, limit int) ([]domain
 	WHERE e.id = ne.id
 	RETURNING e.id, e.sender, e.receiver_id, e.receiver_email, e.subject, e.body, e.template_id, e.status, e.attempts, e.next_retry_at, e.last_error, e.sent_at;
 	`
+	executor := ExtractTx(ctx, r.DB)
 	var emails []domain.Email
-	err := r.DB.SelectContext(ctx, &emails, query, limit)
+	err := sqlx.SelectContext(ctx, executor, &emails, query, limit)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w: %w", op, ErrFailedToFetchEmails, err)
 	}
@@ -85,7 +87,8 @@ func (r *emailRepository) MarkAsSent(ctx context.Context, id string, sentAt time
 	SET status = 'sent', sent_at = $2, last_error = NULL
 	WHERE id = $1
 	`
-	_, err := r.DB.ExecContext(ctx, query, id, sentAt)
+	executor := ExtractTx(ctx, r.DB)
+	_, err := executor.ExecContext(ctx, query, id, sentAt)
 	if err != nil {
 		return fmt.Errorf("%s: %w: %w", op, ErrFailedToUpdateEmail, err)
 	}
@@ -102,7 +105,8 @@ func (r *emailRepository) MarkAsFailed(ctx context.Context, id string, attempts 
 	    status = CASE WHEN $3::timestamptz IS NULL THEN 'failed'::email_status ELSE 'pending'::email_status END
 	WHERE id = $1
 	`
-	_, err := r.DB.ExecContext(ctx, query, id, attempts, nextRetryAt, lastError)
+	executor := ExtractTx(ctx, r.DB)
+	_, err := executor.ExecContext(ctx, query, id, attempts, nextRetryAt, lastError)
 	if err != nil {
 		return fmt.Errorf("%s: %w: %w", op, ErrFailedToUpdateEmail, err)
 	}
