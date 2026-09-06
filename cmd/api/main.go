@@ -1,16 +1,6 @@
 package main
 
 import (
-	"carrpigeo/internal/client"
-	"carrpigeo/internal/config"
-	"carrpigeo/internal/domain"
-	"carrpigeo/internal/logger"
-	"carrpigeo/internal/postgres"
-	"carrpigeo/internal/repository"
-	"carrpigeo/internal/server"
-	"carrpigeo/internal/server/handlers"
-	"carrpigeo/internal/server/middlewares"
-	"carrpigeo/internal/service"
 	"context"
 	"errors"
 	htmltemplate "html/template"
@@ -22,7 +12,19 @@ import (
 	"syscall"
 	txttemplate "text/template"
 
+	"github.com/dmi3midd/carrpigeon/internal/client"
+	"github.com/dmi3midd/carrpigeon/internal/config"
+	"github.com/dmi3midd/carrpigeon/internal/domain"
+	"github.com/dmi3midd/carrpigeon/internal/logger"
+	"github.com/dmi3midd/carrpigeon/internal/postgres"
+	"github.com/dmi3midd/carrpigeon/internal/repository"
+	"github.com/dmi3midd/carrpigeon/internal/server"
+	"github.com/dmi3midd/carrpigeon/internal/server/handlers"
+	"github.com/dmi3midd/carrpigeon/internal/server/middlewares"
+	"github.com/dmi3midd/carrpigeon/internal/service"
+
 	"github.com/dmi3midd/shkvcache"
+	"github.com/go-playground/validator/v10"
 )
 
 func main() {
@@ -106,11 +108,13 @@ func main() {
 	emailWorker.Start(ctx)
 	defer emailWorker.Stop()
 
+	validate := validator.New()
+
 	// Handlers
-	receiversHandler := handlers.NewReceiversHandler(receiverService)
-	sendHandler := handlers.NewSendHandler(sendService)
+	receiversHandler := handlers.NewReceiversHandler(receiverService, validate)
+	sendHandler := handlers.NewSendHandler(sendService, validate)
 	templateHandler := handlers.NewTemplateHandler(templateService)
-	groupHandler := handlers.NewGroupHandler(groupService)
+	groupHandler := handlers.NewGroupHandler(groupService, validate)
 	systemHandler := handlers.NewSystemHandler(db)
 
 	// Middleware

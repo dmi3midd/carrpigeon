@@ -2,14 +2,15 @@ package service
 
 import (
 	"bytes"
-	"carrpigeo/internal/config"
-	"carrpigeo/internal/domain"
-	"carrpigeo/internal/repository"
 	"context"
 	"errors"
 	"fmt"
 	htmltemplate "html/template"
 	txttemplate "text/template"
+
+	"github.com/dmi3midd/carrpigeon/internal/config"
+	"github.com/dmi3midd/carrpigeon/internal/domain"
+	"github.com/dmi3midd/carrpigeon/internal/repository"
 
 	"github.com/rs/xid"
 )

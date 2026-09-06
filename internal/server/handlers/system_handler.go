@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"carrpigeo/internal/postgres"
-	"carrpigeo/internal/shared/apierror"
+	"github.com/dmi3midd/carrpigeon/internal/postgres"
+	"github.com/dmi3midd/carrpigeon/internal/shared/httputils/apierror"
 )
 
 type SystemHandler struct {

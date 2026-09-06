@@ -1,9 +1,10 @@
 package middlewares
 
 import (
-	"carrpigeo/internal/config"
 	"net/http"
 	"slices"
+
+	"github.com/dmi3midd/carrpigeon/internal/config"
 )
 
 type Middlewares struct {

@@ -1,11 +1,12 @@
 package repository
 
 import (
-	"carrpigeo/internal/domain"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+
+	"github.com/dmi3midd/carrpigeon/internal/domain"
 
 	"github.com/jmoiron/sqlx"
 )

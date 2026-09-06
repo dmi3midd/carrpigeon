@@ -1,21 +1,26 @@
 package handlers
 
 import (
-	"carrpigeo/internal/domain"
-	"carrpigeo/internal/service"
-	"carrpigeo/internal/shared/apierror"
+	"github.com/dmi3midd/carrpigeon/internal/domain"
+	"github.com/dmi3midd/carrpigeon/internal/service"
+	"github.com/dmi3midd/carrpigeon/internal/shared/httputils/apierror"
+
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type GroupHandler struct {
+	validate     *validator.Validate
 	groupService service.GroupService
 }
 
-func NewGroupHandler(groupService service.GroupService) *GroupHandler {
+func NewGroupHandler(groupService service.GroupService, validate *validator.Validate) *GroupHandler {
 	return &GroupHandler{
+		validate:     validate,
 		groupService: groupService,
 	}
 }
@@ -101,8 +106,8 @@ func (h *GroupHandler) List(w http.ResponseWriter, r *http.Request) error {
 }
 
 type CreateGroupRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"name" validate:"required,max=128"`
+	Description string `json:"description" validate:"required,max=256"`
 }
 
 type CreateGroupResponse struct {
@@ -115,6 +120,10 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	defer r.Body.Close()
+
+	if err := h.validate.Struct(req); err != nil {
+		return err
+	}
 
 	ctx := r.Context()
 	id, err := h.groupService.Create(ctx, req.Name, req.Description)
@@ -134,8 +143,8 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) error {
 }
 
 type UpdateGroupRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"name" validate:"omitempty,max=128"`
+	Description string `json:"description" validate:"omitempty,max=256"`
 }
 
 type UpdateGroupResponse struct {
@@ -153,6 +162,10 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	defer r.Body.Close()
+
+	if err := h.validate.Struct(req); err != nil {
+		return err
+	}
 
 	ctx := r.Context()
 	id, err := h.groupService.Update(ctx, id, req.Name, req.Description)

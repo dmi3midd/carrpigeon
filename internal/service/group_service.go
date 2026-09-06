@@ -1,12 +1,13 @@
 package service
 
 import (
-	"carrpigeo/internal/domain"
-	"carrpigeo/internal/repository"
 	"context"
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/dmi3midd/carrpigeon/internal/domain"
+	"github.com/dmi3midd/carrpigeon/internal/repository"
 
 	"github.com/rs/xid"
 )

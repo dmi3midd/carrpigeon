@@ -1,13 +1,14 @@
 package handlers
 
 import (
-	"carrpigeo/internal/domain"
-	"carrpigeo/internal/service"
-	"carrpigeo/internal/shared/apierror"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
+
+	"github.com/dmi3midd/carrpigeon/internal/domain"
+	"github.com/dmi3midd/carrpigeon/internal/service"
+	"github.com/dmi3midd/carrpigeon/internal/shared/httputils/apierror"
 )
 
 type TemplateHandler struct {

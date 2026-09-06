@@ -1,18 +1,23 @@
 package handlers
 
 import (
-	"carrpigeo/internal/service"
-	"carrpigeo/internal/shared/apierror"
 	"encoding/json"
 	"net/http"
+
+	"github.com/dmi3midd/carrpigeon/internal/service"
+	"github.com/dmi3midd/carrpigeon/internal/shared/httputils/apierror"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type SendHandler struct {
+	validate    *validator.Validate
 	sendService service.SendService
 }
 
-func NewSendHandler(sendService service.SendService) *SendHandler {
+func NewSendHandler(sendService service.SendService, validate *validator.Validate) *SendHandler {
 	return &SendHandler{
+		validate:    validate,
 		sendService: sendService,
 	}
 }
@@ -25,9 +30,9 @@ func (h *SendHandler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 type SendSingleRequest struct {
-	To      string `json:"to"`
-	Subject string `json:"subject"`
-	Body    string `json:"body"`
+	To      string `json:"to" validate:"required,email"`
+	Subject string `json:"subject" validate:"required,max=256"`
+	Body    string `json:"body" validate:"required,max=2048"`
 }
 
 func (h *SendHandler) SendSingleHandler(w http.ResponseWriter, r *http.Request) error {
@@ -36,6 +41,10 @@ func (h *SendHandler) SendSingleHandler(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 	defer r.Body.Close()
+
+	if err := h.validate.Struct(req); err != nil {
+		return err
+	}
 
 	ctx := r.Context()
 	if err := h.sendService.SendSingle(ctx, req.To, req.Subject, req.Body); err != nil {
@@ -47,10 +56,10 @@ func (h *SendHandler) SendSingleHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 type SendSingleWithTemplateRequest struct {
-	To         string      `json:"to"`
-	Subject    string      `json:"subject"`
-	TemplateID string      `json:"template_id"`
-	Data       interface{} `json:"data"`
+	To         string      `json:"to" validate:"required,email"`
+	Subject    string      `json:"subject" validate:"required,max=256"`
+	TemplateID string      `json:"template_id" validate:"required,len=20"`
+	Data       interface{} `json:"data" validate:"required"`
 }
 
 func (h *SendHandler) SendSingleWithTemplateHandler(w http.ResponseWriter, r *http.Request) error {
@@ -59,6 +68,10 @@ func (h *SendHandler) SendSingleWithTemplateHandler(w http.ResponseWriter, r *ht
 		return err
 	}
 	defer r.Body.Close()
+
+	if err := h.validate.Struct(req); err != nil {
+		return err
+	}
 
 	ctx := r.Context()
 	if err := h.sendService.SendSingleWithTemplate(ctx, req.To, req.Subject, req.TemplateID, req.Data); err != nil {
@@ -70,9 +83,9 @@ func (h *SendHandler) SendSingleWithTemplateHandler(w http.ResponseWriter, r *ht
 }
 
 type SendGroupRequest struct {
-	GroupID string `json:"group_id"`
-	Subject string `json:"subject"`
-	Body    string `json:"body"`
+	GroupID string `json:"group_id" validate:"required,len=20"`
+	Subject string `json:"subject" validate:"required,max=256"`
+	Body    string `json:"body" validate:"required,max=2048"`
 }
 
 func (h *SendHandler) SendGroupHandler(w http.ResponseWriter, r *http.Request) error {
@@ -81,6 +94,10 @@ func (h *SendHandler) SendGroupHandler(w http.ResponseWriter, r *http.Request) e
 		return err
 	}
 	defer r.Body.Close()
+
+	if err := h.validate.Struct(req); err != nil {
+		return err
+	}
 
 	ctx := r.Context()
 	if err := h.sendService.SendGroup(ctx, req.GroupID, req.Subject, req.Body); err != nil {
@@ -92,10 +109,10 @@ func (h *SendHandler) SendGroupHandler(w http.ResponseWriter, r *http.Request) e
 }
 
 type SendGroupWithTemplateRequest struct {
-	GroupID    string      `json:"group_id"`
-	Subject    string      `json:"subject"`
-	TemplateID string      `json:"template_id"`
-	Data       interface{} `json:"data"`
+	GroupID    string      `json:"group_id" validate:"required,len=20"`
+	Subject    string      `json:"subject" validate:"required,max=256"`
+	TemplateID string      `json:"template_id" validate:"required,len=20"`
+	Data       interface{} `json:"data" validate:"required"`
 }
 
 func (h *SendHandler) SendGroupWithTemplateHandler(w http.ResponseWriter, r *http.Request) error {
@@ -104,6 +121,10 @@ func (h *SendHandler) SendGroupWithTemplateHandler(w http.ResponseWriter, r *htt
 		return err
 	}
 	defer r.Body.Close()
+
+	if err := h.validate.Struct(req); err != nil {
+		return err
+	}
 
 	ctx := r.Context()
 	if err := h.sendService.SendGroupWithTemplate(ctx, req.GroupID, req.Subject, req.TemplateID, req.Data); err != nil {

@@ -1,8 +1,9 @@
 package apierror
 
 import (
-	"carrpigeo/internal/service"
 	"errors"
+
+	"github.com/dmi3midd/carrpigeon/internal/service"
 )
 
 var ErrorMap = map[error]func(err error) error{

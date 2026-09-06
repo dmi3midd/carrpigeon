@@ -1,8 +1,6 @@
 package client
 
 import (
-	"carrpigeo/internal/config"
-	"carrpigeo/internal/domain"
 	"crypto/tls"
 	"fmt"
 	"log/slog"
@@ -10,6 +8,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/dmi3midd/carrpigeon/internal/config"
+	"github.com/dmi3midd/carrpigeon/internal/domain"
 
 	"gopkg.in/mail.v2"
 )

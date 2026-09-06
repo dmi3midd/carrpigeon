@@ -3,9 +3,9 @@ package server
 import (
 	"net/http"
 
-	"carrpigeo/internal/config"
-	"carrpigeo/internal/server/handlers"
-	"carrpigeo/internal/server/middlewares"
+	"github.com/dmi3midd/carrpigeon/internal/config"
+	"github.com/dmi3midd/carrpigeon/internal/server/handlers"
+	"github.com/dmi3midd/carrpigeon/internal/server/middlewares"
 )
 
 type Server struct {

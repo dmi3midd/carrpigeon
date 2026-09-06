@@ -1,9 +1,6 @@
 package service
 
 import (
-	"carrpigeo/internal/domain"
-	"carrpigeo/internal/repository"
-	"carrpigeo/internal/shared/utils"
 	"context"
 	"errors"
 	"fmt"
@@ -12,6 +9,10 @@ import (
 	"mime/multipart"
 	txttemplate "text/template"
 	"time"
+
+	"github.com/dmi3midd/carrpigeon/internal/domain"
+	"github.com/dmi3midd/carrpigeon/internal/repository"
+	"github.com/dmi3midd/carrpigeon/internal/shared/utils"
 
 	"github.com/dmi3midd/shkvcache"
 	"github.com/rs/xid"

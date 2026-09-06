@@ -1,15 +1,16 @@
 package client
 
 import (
-	"carrpigeo/internal/config"
-	"carrpigeo/internal/domain"
-	"carrpigeo/internal/repository"
 	"context"
 	"fmt"
 	"log/slog"
 	"math"
 	"sync"
 	"time"
+
+	"github.com/dmi3midd/carrpigeon/internal/config"
+	"github.com/dmi3midd/carrpigeon/internal/domain"
+	"github.com/dmi3midd/carrpigeon/internal/repository"
 
 	"github.com/dmi3midd/shkvcache"
 )

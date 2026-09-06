@@ -1,21 +1,26 @@
 package handlers
 
 import (
-	"carrpigeo/internal/domain"
-	"carrpigeo/internal/service"
-	"carrpigeo/internal/shared/apierror"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
+
+	"github.com/dmi3midd/carrpigeon/internal/domain"
+	"github.com/dmi3midd/carrpigeon/internal/service"
+	"github.com/dmi3midd/carrpigeon/internal/shared/httputils/apierror"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type ReceiversHandler struct {
+	validate        *validator.Validate
 	receiverService service.ReceiverService
 }
 
-func NewReceiversHandler(receiverService service.ReceiverService) *ReceiversHandler {
+func NewReceiversHandler(receiverService service.ReceiverService, validate *validator.Validate) *ReceiversHandler {
 	return &ReceiversHandler{
+		validate:        validate,
 		receiverService: receiverService,
 	}
 }
@@ -97,8 +102,8 @@ func (h *ReceiversHandler) ListReceiversHandler(w http.ResponseWriter, r *http.R
 }
 
 type CreateReceiverRequest struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name  string `json:"name" validate:"required,max=128"`
+	Email string `json:"email" validate:"required,email"`
 }
 
 type CreateReceiverResponse struct {
@@ -111,6 +116,10 @@ func (h *ReceiversHandler) CreateReceiverHandler(w http.ResponseWriter, r *http.
 		return err
 	}
 	defer r.Body.Close()
+
+	if err := h.validate.Struct(req); err != nil {
+		return err
+	}
 
 	ctx := r.Context()
 	id, err := h.receiverService.Create(ctx, req.Name, req.Email)
@@ -130,8 +139,8 @@ func (h *ReceiversHandler) CreateReceiverHandler(w http.ResponseWriter, r *http.
 }
 
 type UpdateReceiverRequest struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name  string `json:"name" validate:"omitempty,max=128"`
+	Email string `json:"email" validate:"omitempty,email"`
 }
 
 type UpdateReceiverResponse struct {
@@ -148,6 +157,10 @@ func (h *ReceiversHandler) UpdateReceiverHandler(w http.ResponseWriter, r *http.
 		return err
 	}
 	defer r.Body.Close()
+
+	if err := h.validate.Struct(req); err != nil {
+		return err
+	}
 
 	ctx := r.Context()
 	receiverId, err := h.receiverService.Update(ctx, id, req.Name, req.Email)

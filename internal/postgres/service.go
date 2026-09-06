@@ -1,14 +1,15 @@
 package postgres
 
 import (
-	"carrpigeo/internal/config"
-	"carrpigeo/migrations"
 	"context"
 	"errors"
 	"fmt"
 	"log/slog"
 	"strconv"
 	"time"
+
+	"github.com/dmi3midd/carrpigeon/internal/config"
+	"github.com/dmi3midd/carrpigeon/migrations"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
