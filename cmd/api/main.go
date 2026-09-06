@@ -91,24 +91,24 @@ func main() {
 	// Repositories
 	templateRepository := repository.NewTemplateRepository(db.GetDB())
 	emailRepository := repository.NewEmailRepository(db.GetDB())
-	emailReceiverRepository := repository.NewReceiverRepository(db.GetDB())
+	receiverRepository := repository.NewReceiverRepository(db.GetDB())
 	groupRepository := repository.NewGroupRepository(db.GetDB())
 	txManager := repository.NewTxManager(db.GetDB())
 
 	templateService := service.NewTemplateService(templateRepository, parsedHtmlTmplCache, parsedTxtTmplCache, domainTmplCache)
-	emailClient := client.NewEmailClient(&cfg.Email.SMTP)
-	emailService := service.NewEmailService(emailClient, emailRepository, emailReceiverRepository, groupRepository, txManager, templateService, &cfg.Email.SMTP)
-	emailReceiverService := service.NewReceiverService(emailReceiverRepository)
-	groupService := service.NewGroupService(groupRepository, emailReceiverRepository)
+	sendService := service.NewSendService(emailRepository, receiverRepository, groupRepository, txManager, templateService, &cfg.Email.SMTP)
+	receiverService := service.NewReceiverService(receiverRepository)
+	groupService := service.NewGroupService(groupRepository, receiverRepository)
 
-	// Worker
+	// Worker & Client
+	emailClient := client.NewEmailClient(&cfg.Email.SMTP)
 	emailWorker := client.NewEmailWorker(emailClient, emailRepository, emailCache, cfg.Email.Worker)
 	emailWorker.Start(ctx)
 	defer emailWorker.Stop()
 
 	// Handlers
-	emailReceiversHandler := handlers.NewReceiversHandler(emailReceiverService)
-	sendHandler := handlers.NewSendHandler(emailService)
+	receiversHandler := handlers.NewReceiversHandler(receiverService)
+	sendHandler := handlers.NewSendHandler(sendService)
 	templateHandler := handlers.NewTemplateHandler(templateService)
 	groupHandler := handlers.NewGroupHandler(groupService)
 	systemHandler := handlers.NewSystemHandler(db)
@@ -121,7 +121,7 @@ func main() {
 		middlewares,
 		systemHandler,
 		sendHandler,
-		emailReceiversHandler,
+		receiversHandler,
 		templateHandler,
 		groupHandler,
 	)

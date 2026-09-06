@@ -8,12 +8,12 @@ import (
 )
 
 type SendHandler struct {
-	emailService service.EmailService
+	sendService service.SendService
 }
 
-func NewSendHandler(emailService service.EmailService) *SendHandler {
+func NewSendHandler(sendService service.SendService) *SendHandler {
 	return &SendHandler{
-		emailService: emailService,
+		sendService: sendService,
 	}
 }
 
@@ -38,7 +38,7 @@ func (h *SendHandler) SendSingleHandler(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 
 	ctx := r.Context()
-	if err := h.emailService.SendSingle(ctx, req.To, req.Subject, req.Body); err != nil {
+	if err := h.sendService.SendSingle(ctx, req.To, req.Subject, req.Body); err != nil {
 		return err
 	}
 
@@ -61,7 +61,7 @@ func (h *SendHandler) SendSingleWithTemplateHandler(w http.ResponseWriter, r *ht
 	defer r.Body.Close()
 
 	ctx := r.Context()
-	if err := h.emailService.SendSingleWithTemplate(ctx, req.To, req.Subject, req.TemplateID, req.Data); err != nil {
+	if err := h.sendService.SendSingleWithTemplate(ctx, req.To, req.Subject, req.TemplateID, req.Data); err != nil {
 		return err
 	}
 
@@ -83,7 +83,7 @@ func (h *SendHandler) SendGroupHandler(w http.ResponseWriter, r *http.Request) e
 	defer r.Body.Close()
 
 	ctx := r.Context()
-	if err := h.emailService.SendGroup(ctx, req.GroupID, req.Subject, req.Body); err != nil {
+	if err := h.sendService.SendGroup(ctx, req.GroupID, req.Subject, req.Body); err != nil {
 		return err
 	}
 
@@ -106,7 +106,7 @@ func (h *SendHandler) SendGroupWithTemplateHandler(w http.ResponseWriter, r *htt
 	defer r.Body.Close()
 
 	ctx := r.Context()
-	if err := h.emailService.SendGroupWithTemplate(ctx, req.GroupID, req.Subject, req.TemplateID, req.Data); err != nil {
+	if err := h.sendService.SendGroupWithTemplate(ctx, req.GroupID, req.Subject, req.TemplateID, req.Data); err != nil {
 		return err
 	}
 

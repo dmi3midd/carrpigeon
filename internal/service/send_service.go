@@ -2,7 +2,6 @@ package service
 
 import (
 	"bytes"
-	"carrpigeo/internal/client"
 	"carrpigeo/internal/config"
 	"carrpigeo/internal/domain"
 	"carrpigeo/internal/repository"
@@ -19,7 +18,7 @@ var (
 	ErrFailedToSaveEmail = errors.New("failed to save email")
 )
 
-type EmailService interface {
+type SendService interface {
 	// SendSingle sends a single email.
 	// Returns [ErrReceiverNotFound] if receiver not found.
 	// Returns [ErrFailedToSaveEmail] if failed to save email.
@@ -38,9 +37,8 @@ type EmailService interface {
 	SendGroupWithTemplate(ctx context.Context, groupId, subject, templateId string, data interface{}) error
 }
 
-type emailService struct {
+type sendService struct {
 	config          *config.SMTP
-	client          client.EmailClient
 	emailRepo       repository.EmailRepository
 	receiverRepo    repository.ReceiverRepository
 	groupRepo       repository.GroupRepository
@@ -48,18 +46,16 @@ type emailService struct {
 	templateService TemplateService
 }
 
-func NewEmailService(
-	client client.EmailClient,
+func NewSendService(
 	emailRepo repository.EmailRepository,
 	receiverRepo repository.ReceiverRepository,
 	groupRepo repository.GroupRepository,
 	txManager repository.TxManager,
 	templateService TemplateService,
 	cfg *config.SMTP,
-) EmailService {
-	return &emailService{
+) SendService {
+	return &sendService{
 		config:          cfg,
-		client:          client,
 		emailRepo:       emailRepo,
 		receiverRepo:    receiverRepo,
 		groupRepo:       groupRepo,
@@ -108,8 +104,8 @@ func buildTemplateData(r *domain.Receiver, data any) any {
 	return result
 }
 
-func (s *emailService) SendSingle(ctx context.Context, to, subject, body string) error {
-	op := "EmailService.SendSingle"
+func (s *sendService) SendSingle(ctx context.Context, to, subject, body string) error {
+	op := "SendService.SendSingle"
 
 	r, err := s.receiverRepo.GetByEmail(ctx, to)
 	if err != nil {
@@ -141,8 +137,8 @@ func (s *emailService) SendSingle(ctx context.Context, to, subject, body string)
 	return nil
 }
 
-func (s *emailService) SendSingleWithTemplate(ctx context.Context, to, subject, templateId string, data interface{}) error {
-	op := "EmailService.SendSingleWithTemplate"
+func (s *sendService) SendSingleWithTemplate(ctx context.Context, to, subject, templateId string, data interface{}) error {
+	op := "SendService.SendSingleWithTemplate"
 
 	r, err := s.receiverRepo.GetByEmail(ctx, to)
 	if err != nil {
@@ -200,8 +196,8 @@ func (s *emailService) SendSingleWithTemplate(ctx context.Context, to, subject, 
 	return nil
 }
 
-func (s *emailService) SendGroup(ctx context.Context, groupId, subject, body string) error {
-	op := "EmailService.SendGroup"
+func (s *sendService) SendGroup(ctx context.Context, groupId, subject, body string) error {
+	op := "SendService.SendGroup"
 	g, err := s.groupRepo.GetByID(ctx, groupId)
 	if err != nil {
 		if errors.Is(err, repository.ErrNoGroup) {
@@ -242,8 +238,8 @@ func (s *emailService) SendGroup(ctx context.Context, groupId, subject, body str
 	return nil
 }
 
-func (s *emailService) SendGroupWithTemplate(ctx context.Context, groupId, subject, templateId string, data interface{}) error {
-	op := "EmailService.SendGroupWithTemplate"
+func (s *sendService) SendGroupWithTemplate(ctx context.Context, groupId, subject, templateId string, data interface{}) error {
+	op := "SendService.SendGroupWithTemplate"
 
 	g, err := s.groupRepo.GetByID(ctx, groupId)
 	if err != nil {
