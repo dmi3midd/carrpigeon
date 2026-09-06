@@ -5,6 +5,7 @@ import (
 	"carrpigeo/internal/domain"
 	"carrpigeo/internal/repository"
 	"context"
+	"fmt"
 	"log/slog"
 	"math"
 	"sync"
@@ -16,6 +17,7 @@ import (
 type EmailWorker interface {
 	Start(ctx context.Context)
 	Stop()
+	RecoverStuckEmails(ctx context.Context) error
 }
 
 type emailWorker struct {
@@ -59,12 +61,56 @@ func NewEmailWorker(
 	}
 }
 
+func (w *emailWorker) RecoverStuckEmails(ctx context.Context) error {
+	const batchSize = 50
+	totalRecovered := 0
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		emails, err := w.emailRepo.ResetProcessing(ctx, batchSize)
+		if err != nil {
+			return fmt.Errorf("failed to recover stuck processing emails: %w", err)
+		}
+
+		if len(emails) == 0 {
+			break
+		}
+
+		for _, email := range emails {
+			totalRecovered++
+			slog.Warn("recovered stuck email, reset status to pending",
+				slog.String("id", email.ID),
+				slog.String("receiver", email.ReceiverEmail),
+			)
+		}
+
+		if len(emails) < batchSize {
+			break
+		}
+	}
+
+	if totalRecovered > 0 {
+		slog.Info("stuck emails recovery completed", slog.Int("recovered_count", totalRecovered))
+	}
+
+	return nil
+}
+
 func (w *emailWorker) Start(ctx context.Context) {
 	slog.Info("starting email worker pool",
 		slog.Int("pool_size", w.cfg.WorkerPoolSize),
 		slog.Int("max_retries", w.cfg.MaxRetries),
 		slog.Duration("poll_interval", w.cfg.PollInterval),
 	)
+
+	if err := w.RecoverStuckEmails(ctx); err != nil {
+		slog.Error("failed to recover stuck emails on startup", slog.String("error", err.Error()))
+	}
 
 	for i := 1; i <= w.cfg.WorkerPoolSize; i++ {
 		w.wg.Add(1)
@@ -98,23 +144,42 @@ func (w *emailWorker) runDispatcher(ctx context.Context) {
 
 func (w *emailWorker) dispatch(ctx context.Context) {
 	batchSize := w.cfg.WorkerPoolSize * 2
-	emails, err := w.emailRepo.FetchPending(ctx, batchSize)
-	if err != nil {
-		slog.Error("failed to fetch pending emails", slog.String("error", err.Error()))
-		return
-	}
 
-	for _, email := range emails {
-		if w.emailCache != nil {
-			_ = w.emailCache.Set(email.ID, &email, 300)
-		}
-
+	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-w.stopChan:
 			return
-		case w.jobsChan <- email:
+		default:
+		}
+
+		emails, err := w.emailRepo.FetchPending(ctx, batchSize)
+		if err != nil {
+			slog.Error("failed to fetch pending emails", slog.String("error", err.Error()))
+			return
+		}
+
+		if len(emails) == 0 {
+			return
+		}
+
+		for _, email := range emails {
+			if w.emailCache != nil {
+				_ = w.emailCache.Set(email.ID, &email, 300)
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case <-w.stopChan:
+				return
+			case w.jobsChan <- email:
+			}
+		}
+
+		if len(emails) < batchSize {
+			return
 		}
 	}
 }
@@ -128,11 +193,14 @@ func (w *emailWorker) runWorker(ctx context.Context) {
 }
 
 func (w *emailWorker) processEmail(ctx context.Context, email domain.Email) {
-	// slog.Debug("sending email", slog.String("id", email.ID), slog.String("receiver", email.Receiver))
 	err := w.client.Send(&email)
+
+	dbCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	if err == nil {
 		now := time.Now()
-		if updateErr := w.emailRepo.MarkAsSent(ctx, email.ID, now); updateErr != nil {
+		if updateErr := w.emailRepo.MarkAsSent(dbCtx, email.ID, now); updateErr != nil {
 			slog.Error("failed to mark email as sent in db", slog.String("id", email.ID), slog.String("error", updateErr.Error()))
 		} else {
 			slog.Info("email sent successfully", slog.String("id", email.ID), slog.String("receiver", email.ReceiverEmail))
@@ -161,7 +229,7 @@ func (w *emailWorker) processEmail(ctx context.Context, email domain.Email) {
 		slog.Error("email reached max retry attempts, marking as failed", slog.String("id", email.ID), slog.Int("attempts", nextAttempts))
 	}
 
-	if updateErr := w.emailRepo.MarkAsFailed(ctx, email.ID, nextAttempts, nextRetryAt, err.Error()); updateErr != nil {
+	if updateErr := w.emailRepo.MarkAsFailed(dbCtx, email.ID, nextAttempts, nextRetryAt, err.Error()); updateErr != nil {
 		slog.Error("failed to mark email status in db", slog.String("id", email.ID), slog.String("error", updateErr.Error()))
 	}
 
@@ -175,6 +243,9 @@ func (w *emailWorker) Stop() {
 		slog.Info("stopping email worker...")
 		close(w.stopChan)
 		w.wg.Wait()
+		if err := w.client.Close(); err != nil {
+			slog.Error("failed to close email client", slog.String("error", err.Error()))
+		}
 		slog.Info("email worker stopped gracefully")
 	})
 }

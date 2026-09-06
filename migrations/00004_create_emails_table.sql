@@ -12,7 +12,7 @@ CREATE TABLE emails (
     attempts INTEGER NOT NULL DEFAULT 0,
     next_retry_at TIMESTAMPTZ,
     last_error TEXT,
-    sent_at TIMESTAMP NOT NULL
+    sent_at TIMESTAMPTZ
 );
 CREATE INDEX idx_emails_status_next_retry ON emails (status, next_retry_at);
 

@@ -21,8 +21,9 @@ type EmailRepository interface {
 	// Returns [ErrFailedToCreateEmail] if failed to create email.
 	Create(ctx context.Context, email *domain.Email) error
 	// FetchPending selects pending emails ready for sending, marks them as 'processing' and returns them.
-	// Uses FOR UPDATE SKIP LOCKED to ensure concurrency safety.
 	FetchPending(ctx context.Context, limit int) ([]domain.Email, error)
+	// ResetProcessing resets processing emails back to pending status and returns them.
+	ResetProcessing(ctx context.Context, limit int) ([]domain.Email, error)
 	// MarkAsSent marks an email as sent.
 	MarkAsSent(ctx context.Context, id string, sentAt time.Time) error
 	// MarkAsFailed updates retry attempts, next_retry_at, last_error, and status ('pending' for retry, 'failed' if no more retries).
@@ -76,6 +77,31 @@ func (r *emailRepository) FetchPending(ctx context.Context, limit int) ([]domain
 	err := sqlx.SelectContext(ctx, executor, &emails, query, limit)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w: %w", op, ErrFailedToFetchEmails, err)
+	}
+	return emails, nil
+}
+
+func (r *emailRepository) ResetProcessing(ctx context.Context, limit int) ([]domain.Email, error) {
+	op := "EmailRepository.ResetProcessing"
+	query := `
+	WITH stuck_emails AS (
+		SELECT id
+		FROM emails
+		WHERE status = 'processing'
+		LIMIT $1
+		FOR UPDATE SKIP LOCKED
+	)
+	UPDATE emails e
+	SET status = 'pending'
+	FROM stuck_emails se
+	WHERE e.id = se.id
+	RETURNING e.id, e.sender, e.receiver_id, e.receiver_email, e.subject, e.body, e.template_id, e.status, e.attempts, e.next_retry_at, e.last_error, e.sent_at;
+	`
+	executor := ExtractTx(ctx, r.DB)
+	var emails []domain.Email
+	err := sqlx.SelectContext(ctx, executor, &emails, query, limit)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w: %w", op, ErrFailedToUpdateEmail, err)
 	}
 	return emails, nil
 }
