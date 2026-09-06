@@ -38,6 +38,17 @@ type GetReceiverByIdResponse struct {
 	Receiver *domain.Receiver `json:"receiver"`
 }
 
+// GetReceiverByIdHandler godoc
+// @Summary      Get receiver by ID
+// @Description  Get details of an email receiver by ID
+// @Tags         receivers
+// @Produce      json
+// @Param        id   path      string  true  "Receiver ID (xid)"
+// @Success      200  {object}  GetReceiverByIdResponse
+// @Failure      400  {object}  apierror.APIError "Bad Request"
+// @Failure      404  {object}  apierror.APIError "Receiver Not Found"
+// @Failure      500  {object}  apierror.APIError "Internal Server Error"
+// @Router       /receivers/{id} [get]
 func (h *ReceiversHandler) GetReceiverByIdHandler(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
@@ -65,6 +76,17 @@ type ListReceiversResponse struct {
 	Receivers []*domain.Receiver `json:"receivers"`
 }
 
+// ListReceiversHandler godoc
+// @Summary      List receivers
+// @Description  Get a paginated list of email receivers
+// @Tags         receivers
+// @Produce      json
+// @Param        limit   query     int  false  "Number of items to return (default 10)"  default(10)
+// @Param        offset  query     int  false  "Number of items to skip (default 0)"     default(0)
+// @Success      200     {object}  ListReceiversResponse
+// @Failure      400     {object}  apierror.APIError "Bad Request"
+// @Failure      500     {object}  apierror.APIError "Internal Server Error"
+// @Router       /receivers [get]
 func (h *ReceiversHandler) ListReceiversHandler(w http.ResponseWriter, r *http.Request) error {
 	limit := 10
 	offset := 0
@@ -103,14 +125,26 @@ func (h *ReceiversHandler) ListReceiversHandler(w http.ResponseWriter, r *http.R
 }
 
 type CreateReceiverRequest struct {
-	Name  string `json:"name" validate:"required,max=128"`
-	Email string `json:"email" validate:"required,email"`
+	Name  string `json:"name" validate:"required,max=128" example:"John Doe"`
+	Email string `json:"email" validate:"required,email" example:"john.doe@example.com"`
 }
 
 type CreateReceiverResponse struct {
-	ID string `json:"id"`
+	ID string `json:"id" example:"c790g02f8n90184b23qg"`
 }
 
+// CreateReceiverHandler godoc
+// @Summary      Create receiver
+// @Description  Creates a new email receiver
+// @Tags         receivers
+// @Accept       json
+// @Produce      json
+// @Param        request body CreateReceiverRequest true "Receiver creation data"
+// @Success      202 {object} CreateReceiverResponse
+// @Failure      400 {object} apierror.APIError "Validation error"
+// @Failure      409 {object} apierror.APIError "Receiver already exists"
+// @Failure      500 {object} apierror.APIError "Internal Server Error"
+// @Router       /receivers [post]
 func (h *ReceiversHandler) CreateReceiverHandler(w http.ResponseWriter, r *http.Request) error {
 	req, err := httputils.BindAndValidate[CreateReceiverRequest](r, h.validate)
 	if err != nil {
@@ -135,14 +169,27 @@ func (h *ReceiversHandler) CreateReceiverHandler(w http.ResponseWriter, r *http.
 }
 
 type UpdateReceiverRequest struct {
-	Name  string `json:"name" validate:"omitempty,max=128"`
-	Email string `json:"email" validate:"omitempty,email"`
+	Name  string `json:"name" validate:"omitempty,max=128" example:"Jane Doe"`
+	Email string `json:"email" validate:"omitempty,email" example:"jane.doe@example.com"`
 }
 
 type UpdateReceiverResponse struct {
-	ID string `json:"id"`
+	ID string `json:"id" example:"c790g02f8n90184b23qg"`
 }
 
+// UpdateReceiverHandler godoc
+// @Summary      Update receiver
+// @Description  Updates an existing receiver's name or email
+// @Tags         receivers
+// @Accept       json
+// @Produce      json
+// @Param        id      path     string                true  "Receiver ID (xid)"
+// @Param        request body     UpdateReceiverRequest true  "Receiver update data"
+// @Success      200     {object} UpdateReceiverResponse
+// @Failure      400     {object} apierror.APIError "Validation error"
+// @Failure      404     {object} apierror.APIError "Receiver Not Found"
+// @Failure      500     {object} apierror.APIError "Internal Server Error"
+// @Router       /receivers/{id} [put]
 func (h *ReceiversHandler) UpdateReceiverHandler(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
@@ -172,6 +219,16 @@ func (h *ReceiversHandler) UpdateReceiverHandler(w http.ResponseWriter, r *http.
 	return nil
 }
 
+// RemoveReceiverHandler godoc
+// @Summary      Delete receiver
+// @Description  Deletes an email receiver by ID
+// @Tags         receivers
+// @Produce      json
+// @Param        id   path   string  true  "Receiver ID (xid)"
+// @Success      200  "OK"
+// @Failure      400  {object}  apierror.APIError "Bad Request"
+// @Failure      500  {object}  apierror.APIError "Internal Server Error"
+// @Router       /receivers/{id} [delete]
 func (h *ReceiversHandler) RemoveReceiverHandler(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {

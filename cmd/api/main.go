@@ -27,6 +27,11 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// @title           Carrpigeon API
+// @version         1.0
+// @description     Carrpigeon email distribution and template service API.
+// @host            localhost:2500
+// @BasePath        /
 func main() {
 	// Root context with signal cancellation for graceful shutdown
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

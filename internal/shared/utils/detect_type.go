@@ -17,6 +17,8 @@ var (
 
 // DetectTemplateType checks the file extension and content to determine if it is HTML.
 // Returns isHTML (bool) and an error if the file is invalid or binary.
+// Returns [ErrUnsupportedFileType] if the file extension is not .html, .htm or .txt.
+// Returns [ErrBinaryFile] if the file is a binary file.
 func DetectTemplateType(file multipart.File, filename string) (bool, error) {
 	op := "utils.DetectTemplateType"
 

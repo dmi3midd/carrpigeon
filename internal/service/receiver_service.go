@@ -27,8 +27,10 @@ type ReceiverService interface {
 	// List returns list of email receivers with pagination.
 	List(ctx context.Context, limit, offset int) ([]*domain.Receiver, error)
 	// Create creates email receiver in db.
+	// Returns [ErrReceiverAlreadyExists] if email receiver already exists.
 	Create(ctx context.Context, name, email string) (string, error)
 	// Update updates email receiver in db.
+	// Returns [ErrReceiverNotFound] if email receiver not found.
 	Update(ctx context.Context, id, name, email string) (string, error)
 	// Delete deletes email receiver from db.
 	Delete(ctx context.Context, id string) error

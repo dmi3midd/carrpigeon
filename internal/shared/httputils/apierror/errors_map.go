@@ -7,9 +7,6 @@ import (
 )
 
 var ErrorMap = map[error]func(err error) error{
-	service.ErrFailedToSaveEmail: func(err error) error {
-		return NewInternalServerError(err)
-	},
 	service.ErrReceiverNotFound: func(err error) error {
 		return NewNotFoundError(err, "Receiver not found")
 	},

@@ -1,0 +1,1023 @@
+basePath: /
+definitions:
+  apierror.APIError:
+    properties:
+      code:
+        type: integer
+      sysMessage:
+        type: string
+      timestamp:
+        type: string
+      userMessage:
+        type: string
+    type: object
+  domain.Group:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      receivers_count:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  domain.Receiver:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.Template:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      fields:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      is_html:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.TemplateMetadata:
+    properties:
+      created_at:
+        type: string
+      fields:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      is_html:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  handlers.CreateGroupRequest:
+    properties:
+      description:
+        example: Marketing subscribers list
+        maxLength: 256
+        type: string
+      name:
+        example: Marketing
+        maxLength: 128
+        type: string
+    required:
+    - description
+    - name
+    type: object
+  handlers.CreateGroupResponse:
+    properties:
+      id:
+        example: c790g02f8n90184b23qg
+        type: string
+    type: object
+  handlers.CreateReceiverRequest:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      name:
+        example: John Doe
+        maxLength: 128
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  handlers.CreateReceiverResponse:
+    properties:
+      id:
+        example: c790g02f8n90184b23qg
+        type: string
+    type: object
+  handlers.CreateTemplateResponse:
+    properties:
+      id:
+        example: c790g02f8n90184b23qg
+        type: string
+    type: object
+  handlers.GetGroupResponse:
+    properties:
+      group:
+        $ref: '#/definitions/domain.Group'
+    type: object
+  handlers.GetReceiverByIdResponse:
+    properties:
+      receiver:
+        $ref: '#/definitions/domain.Receiver'
+    type: object
+  handlers.GetTemplateRawResponse:
+    properties:
+      template:
+        $ref: '#/definitions/domain.Template'
+    type: object
+  handlers.ListGroupReceiversResponse:
+    properties:
+      receivers:
+        items:
+          $ref: '#/definitions/domain.Receiver'
+        type: array
+    type: object
+  handlers.ListGroupsResponse:
+    properties:
+      groups:
+        items:
+          $ref: '#/definitions/domain.Group'
+        type: array
+    type: object
+  handlers.ListReceiversResponse:
+    properties:
+      receivers:
+        items:
+          $ref: '#/definitions/domain.Receiver'
+        type: array
+    type: object
+  handlers.ListTemplateMetadataResponse:
+    properties:
+      templates:
+        items:
+          $ref: '#/definitions/domain.TemplateMetadata'
+        type: array
+    type: object
+  handlers.SendGroupRequest:
+    properties:
+      body:
+        example: Important team updates...
+        maxLength: 2048
+        type: string
+      group_id:
+        example: c790g02f8n90184b23qg
+        type: string
+      subject:
+        example: Team Announcement
+        maxLength: 256
+        type: string
+    required:
+    - body
+    - group_id
+    - subject
+    type: object
+  handlers.SendGroupWithTemplateRequest:
+    properties:
+      data: {}
+      group_id:
+        example: c790g02f8n90184b23qg
+        type: string
+      subject:
+        example: Monthly Digest
+        maxLength: 256
+        type: string
+      template_id:
+        example: c790g02f8n90184b23qg
+        type: string
+    required:
+    - data
+    - group_id
+    - subject
+    - template_id
+    type: object
+  handlers.SendSingleRequest:
+    properties:
+      body:
+        example: Hello, this is a plain text message.
+        maxLength: 2048
+        type: string
+      subject:
+        example: Welcome to Carrpigeon!
+        maxLength: 256
+        type: string
+      to:
+        example: receiver@example.com
+        type: string
+    required:
+    - body
+    - subject
+    - to
+    type: object
+  handlers.SendSingleWithTemplateRequest:
+    properties:
+      data: {}
+      subject:
+        example: Your invoice
+        maxLength: 256
+        type: string
+      template_id:
+        example: c790g02f8n90184b23qg
+        type: string
+      to:
+        example: receiver@example.com
+        type: string
+    required:
+    - data
+    - subject
+    - template_id
+    - to
+    type: object
+  handlers.UpdateGroupRequest:
+    properties:
+      description:
+        example: Product announcements list
+        maxLength: 256
+        type: string
+      name:
+        example: Product Updates
+        maxLength: 128
+        type: string
+    type: object
+  handlers.UpdateGroupResponse:
+    properties:
+      id:
+        example: c790g02f8n90184b23qg
+        type: string
+    type: object
+  handlers.UpdateReceiverRequest:
+    properties:
+      email:
+        example: jane.doe@example.com
+        type: string
+      name:
+        example: Jane Doe
+        maxLength: 128
+        type: string
+    type: object
+  handlers.UpdateReceiverResponse:
+    properties:
+      id:
+        example: c790g02f8n90184b23qg
+        type: string
+    type: object
+  handlers.UpdateTemplateResponse:
+    properties:
+      id:
+        example: c790g02f8n90184b23qg
+        type: string
+    type: object
+host: localhost:2500
+info:
+  contact: {}
+  description: Carrpigeon email distribution and template service API.
+  title: Carrpigeon API
+  version: "1.0"
+paths:
+  /groups:
+    get:
+      description: Get a paginated list of receiver groups
+      parameters:
+      - default: 10
+        description: Number of items to return (default 10)
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ListGroupsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: List groups
+      tags:
+      - groups
+    post:
+      consumes:
+      - application/json
+      description: Creates a new receiver group
+      parameters:
+      - description: Group creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.CreateGroupResponse'
+        "400":
+          description: Bad Request or validation error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Create group
+      tags:
+      - groups
+  /groups/{id}:
+    delete:
+      description: Deletes a receiver group by ID
+      parameters:
+      - description: Group ID (xid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Group Not Found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Delete group
+      tags:
+      - groups
+    get:
+      description: Get details of a receiver group by ID
+      parameters:
+      - description: Group ID (xid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.GetGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Group Not Found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Get group by ID
+      tags:
+      - groups
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing receiver group
+      parameters:
+      - description: Group ID (xid)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Group update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UpdateGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Group Not Found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Update group
+      tags:
+      - groups
+  /groups/{id}/receivers:
+    get:
+      description: Get a paginated list of receivers belonging to a specific group
+      parameters:
+      - description: Group ID (xid)
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 10
+        description: Number of items to return (default 10)
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ListGroupReceiversResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Group Not Found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: List receivers in group
+      tags:
+      - groups
+  /groups/{id}/receivers/{receiverId}:
+    delete:
+      description: Removes a receiver from a group
+      parameters:
+      - description: Group ID (xid)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Receiver ID (xid)
+        in: path
+        name: receiverId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Group or receiver relation not found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Remove receiver from group
+      tags:
+      - groups
+    put:
+      description: Associates an existing receiver with a group
+      parameters:
+      - description: Group ID (xid)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Receiver ID (xid)
+        in: path
+        name: receiverId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Group or receiver not found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Add receiver to group
+      tags:
+      - groups
+  /health:
+    get:
+      description: Get the health status and connection statistics of the database
+        and service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Health check
+      tags:
+      - system
+  /receivers:
+    get:
+      description: Get a paginated list of email receivers
+      parameters:
+      - default: 10
+        description: Number of items to return (default 10)
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ListReceiversResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: List receivers
+      tags:
+      - receivers
+    post:
+      consumes:
+      - application/json
+      description: Creates a new email receiver
+      parameters:
+      - description: Receiver creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateReceiverRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/handlers.CreateReceiverResponse'
+        "400":
+          description: Invalid request or validation failed
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Create receiver
+      tags:
+      - receivers
+  /receivers/{id}:
+    delete:
+      description: Deletes an email receiver by ID
+      parameters:
+      - description: Receiver ID (xid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Receiver Not Found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Delete receiver
+      tags:
+      - receivers
+    get:
+      description: Get details of an email receiver by ID
+      parameters:
+      - description: Receiver ID (xid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.GetReceiverByIdResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Receiver Not Found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Get receiver by ID
+      tags:
+      - receivers
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing receiver's name or email
+      parameters:
+      - description: Receiver ID (xid)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Receiver update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateReceiverRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UpdateReceiverResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Receiver Not Found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Update receiver
+      tags:
+      - receivers
+  /send/group:
+    post:
+      consumes:
+      - application/json
+      description: Queues an email to all active receivers belonging to a specified
+        group
+      parameters:
+      - description: Group email send payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SendGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad Request or validation error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Group not found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Send email to group
+      tags:
+      - send
+  /send/group/template:
+    post:
+      consumes:
+      - application/json
+      description: Renders a template with provided data and queues an email to all
+        members of the group
+      parameters:
+      - description: Group templated email send payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SendGroupWithTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad Request or validation error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Group or template not found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Send email to group with template
+      tags:
+      - send
+  /send/single:
+    post:
+      consumes:
+      - application/json
+      description: Queues a single plain text email to a specific recipient
+      parameters:
+      - description: Email send payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SendSingleRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad Request or validation error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Send single email
+      tags:
+      - send
+  /send/single/template:
+    post:
+      consumes:
+      - application/json
+      description: Renders a template with provided data and queues an email to a
+        single recipient
+      parameters:
+      - description: Templated email send payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SendSingleWithTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad Request or validation error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Template not found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Send single email with template
+      tags:
+      - send
+  /templates:
+    get:
+      description: Get a paginated list of email templates metadata
+      parameters:
+      - default: 10
+        description: Number of items to return (default 10)
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ListTemplateMetadataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: List templates metadata
+      tags:
+      - templates
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads and saves a new HTML or plain text template file
+      parameters:
+      - description: Template name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Template file (.html or .txt)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/handlers.CreateTemplateResponse'
+        "400":
+          description: Bad Request or missing fields
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Upload template
+      tags:
+      - templates
+  /templates/{id}:
+    delete:
+      description: Deletes an email template by ID
+      parameters:
+      - description: Template ID (xid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Template Not Found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Delete template
+      tags:
+      - templates
+    get:
+      description: Get raw template content and metadata by ID
+      parameters:
+      - description: Template ID (xid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.GetTemplateRawResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Template Not Found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Get raw template
+      tags:
+      - templates
+    put:
+      consumes:
+      - multipart/form-data
+      description: Updates an existing template's name and file content
+      parameters:
+      - description: Template ID (xid)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Template name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Template file (.html or .txt)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UpdateTemplateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Template Not Found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: Update template
+      tags:
+      - templates
+swagger: "2.0"

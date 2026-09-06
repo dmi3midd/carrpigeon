@@ -17,10 +17,10 @@ var (
 
 type GroupRepository interface {
 	// GetByID returns a group by its ID
-	// Returns ErrNoGroup if no group is found
+	// Returns [ErrNoGroup] if no group is found
 	GetByID(ctx context.Context, id string) (*domain.Group, error)
 	// GetByName returns a group by its name
-	// Returns ErrNoGroup if no group is found
+	// Returns [ErrNoGroup] if no group is found
 	GetByName(ctx context.Context, name string) (*domain.Group, error)
 	// List returns a list of groups
 	List(ctx context.Context, limit, offset int) ([]domain.Group, error)

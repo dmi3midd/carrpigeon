@@ -22,6 +22,14 @@ func (h *SystemHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /health", apierror.ErrorHandler(h.HealthHandler))
 }
 
+// HealthHandler godoc
+// @Summary      Health check
+// @Description  Get the health status and connection statistics of the database and service
+// @Tags         system
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Failure      500  {object}  apierror.APIError "Internal Server Error"
+// @Router       /health [get]
 func (h *SystemHandler) HealthHandler(w http.ResponseWriter, r *http.Request) error {
 	resp, err := json.Marshal(h.postgresService.Health())
 	if err != nil {

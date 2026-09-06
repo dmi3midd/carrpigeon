@@ -68,6 +68,11 @@ docker-logs:
 docker-restart:
 	@docker compose restart carrpigeon
 
+# Generate Swagger documentation
+swagger:
+	@echo "Generating swagger docs..."
+	@swag init -g main.go -d cmd/api,internal/server/handlers,internal/domain,internal/shared/httputils/apierror --parseInternal
+
 # Help
 help:
 	@echo "Available commands:"
@@ -76,6 +81,7 @@ help:
 	@echo "  make build          - Build binary locally"
 	@echo "  make watch          - Run with live-reload (air)"
 	@echo "  make test           - Run tests"
+	@echo "  make swagger        - Generate Swagger API documentation"
 	@echo "  make tidy           - Run go mod tidy"
 	@echo "  make clean          - Remove built binary"
 	@echo "  make docker-build   - Build Docker images"
@@ -85,4 +91,4 @@ help:
 	@echo "  make docker-logs    - Follow application logs in Docker"
 	@echo "  make docker-restart - Restart application container"
 
-.PHONY: setup build run test tidy clean watch docker-build docker-run docker-down docker-down-v docker-logs docker-restart help
+.PHONY: setup build run test swagger tidy clean watch docker-build docker-run docker-down docker-down-v docker-logs docker-restart help

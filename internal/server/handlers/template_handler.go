@@ -31,6 +31,17 @@ type GetTemplateRawResponse struct {
 	Template *domain.Template `json:"template"`
 }
 
+// GetTemplateRawHandler godoc
+// @Summary      Get raw template
+// @Description  Get raw template content and metadata by ID
+// @Tags         templates
+// @Produce      json
+// @Param        id   path      string  true  "Template ID (xid)"
+// @Success      200  {object}  GetTemplateRawResponse
+// @Failure      400  {object}  apierror.APIError "Bad Request"
+// @Failure      404  {object}  apierror.APIError "Template Not Found"
+// @Failure      500  {object}  apierror.APIError "Internal Server Error"
+// @Router       /templates/{id} [get]
 func (h *TemplateHandler) GetTemplateRawHandler(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
@@ -58,6 +69,17 @@ type ListTemplateMetadataResponse struct {
 	Templates []domain.TemplateMetadata `json:"templates"`
 }
 
+// ListTemplateMetadataHandler godoc
+// @Summary      List templates metadata
+// @Description  Get a paginated list of email templates metadata
+// @Tags         templates
+// @Produce      json
+// @Param        limit   query     int  false  "Number of items to return (default 10)"  default(10)
+// @Param        offset  query     int  false  "Number of items to skip (default 0)"     default(0)
+// @Success      200     {object}  ListTemplateMetadataResponse
+// @Failure      400     {object}  apierror.APIError "Bad Request"
+// @Failure      500     {object}  apierror.APIError "Internal Server Error"
+// @Router       /templates [get]
 func (h *TemplateHandler) ListTemplateMetadataHandler(w http.ResponseWriter, r *http.Request) error {
 	limit := 10
 	offset := 0
@@ -97,9 +119,21 @@ func (h *TemplateHandler) ListTemplateMetadataHandler(w http.ResponseWriter, r *
 }
 
 type CreateTemplateResponse struct {
-	ID string `json:"id"`
+	ID string `json:"id" example:"c790g02f8n90184b23qg"`
 }
 
+// CreateTemplateHandler godoc
+// @Summary      Upload template
+// @Description  Uploads and saves a new HTML or plain text template file
+// @Tags         templates
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        name formData string true "Template name"
+// @Param        file formData file   true "Template file (.html or .txt)"
+// @Success      202  {object} CreateTemplateResponse
+// @Failure      400  {object} apierror.APIError "Invalid file type or missing fields"
+// @Failure      500  {object} apierror.APIError "Internal Server Error"
+// @Router       /templates [post]
 func (h *TemplateHandler) CreateTemplateHandler(w http.ResponseWriter, r *http.Request) error {
 	r.Body = http.MaxBytesReader(w, r.Body, 512<<10)
 
@@ -133,9 +167,23 @@ func (h *TemplateHandler) CreateTemplateHandler(w http.ResponseWriter, r *http.R
 }
 
 type UpdateTemplateResponse struct {
-	ID string `json:"id"`
+	ID string `json:"id" example:"c790g02f8n90184b23qg"`
 }
 
+// UpdateTemplateHandler godoc
+// @Summary      Update template
+// @Description  Updates an existing template's name and file content
+// @Tags         templates
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        id   path     string true "Template ID (xid)"
+// @Param        name formData string true "Template name"
+// @Param        file formData file   true "Template file (.html or .txt)"
+// @Success      200  {object} UpdateTemplateResponse
+// @Failure      400  {object} apierror.APIError "Invalid file type or missing fields"
+// @Failure      404  {object} apierror.APIError "Template Not Found"
+// @Failure      500  {object} apierror.APIError "Internal Server Error"
+// @Router       /templates/{id} [put]
 func (h *TemplateHandler) UpdateTemplateHandler(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
@@ -173,6 +221,16 @@ func (h *TemplateHandler) UpdateTemplateHandler(w http.ResponseWriter, r *http.R
 	return nil
 }
 
+// RemoveTemplateHandler godoc
+// @Summary      Delete template
+// @Description  Deletes an email template by ID
+// @Tags         templates
+// @Produce      json
+// @Param        id   path   string  true  "Template ID (xid)"
+// @Success      200  "OK"
+// @Failure      400  {object}  apierror.APIError "Bad Request"
+// @Failure      500  {object}  apierror.APIError "Internal Server Error"
+// @Router       /templates/{id} [delete]
 func (h *TemplateHandler) RemoveTemplateHandler(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {

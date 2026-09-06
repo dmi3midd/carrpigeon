@@ -42,6 +42,17 @@ type GetGroupResponse struct {
 	Group *domain.Group `json:"group"`
 }
 
+// Get godoc
+// @Summary      Get group by ID
+// @Description  Get details of a receiver group by ID
+// @Tags         groups
+// @Produce      json
+// @Param        id   path      string  true  "Group ID (xid)"
+// @Success      200  {object}  GetGroupResponse
+// @Failure      400  {object}  apierror.APIError "Bad Request"
+// @Failure      404  {object}  apierror.APIError "Group Not Found"
+// @Failure      500  {object}  apierror.APIError "Internal Server Error"
+// @Router       /groups/{id} [get]
 func (h *GroupHandler) Get(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
@@ -69,6 +80,17 @@ type ListGroupsResponse struct {
 	Groups []domain.Group `json:"groups"`
 }
 
+// List godoc
+// @Summary      List groups
+// @Description  Get a paginated list of receiver groups
+// @Tags         groups
+// @Produce      json
+// @Param        limit   query     int  false  "Number of items to return (default 10)"  default(10)
+// @Param        offset  query     int  false  "Number of items to skip (default 0)"     default(0)
+// @Success      200     {object}  ListGroupsResponse
+// @Failure      400     {object}  apierror.APIError "Bad Request"
+// @Failure      500     {object}  apierror.APIError "Internal Server Error"
+// @Router       /groups [get]
 func (h *GroupHandler) List(w http.ResponseWriter, r *http.Request) error {
 	limit := 10
 	offset := 0
@@ -107,14 +129,26 @@ func (h *GroupHandler) List(w http.ResponseWriter, r *http.Request) error {
 }
 
 type CreateGroupRequest struct {
-	Name        string `json:"name" validate:"required,max=128"`
-	Description string `json:"description" validate:"required,max=256"`
+	Name        string `json:"name" validate:"required,max=128" example:"Marketing"`
+	Description string `json:"description" validate:"required,max=256" example:"Marketing subscribers list"`
 }
 
 type CreateGroupResponse struct {
-	ID string `json:"id"`
+	ID string `json:"id" example:"c790g02f8n90184b23qg"`
 }
 
+// Create godoc
+// @Summary      Create group
+// @Description  Creates a new receiver group
+// @Tags         groups
+// @Accept       json
+// @Produce      json
+// @Param        request body CreateGroupRequest true "Group creation data"
+// @Success      200 {object} CreateGroupResponse
+// @Failure      400 {object} apierror.APIError "Validation error"
+// @Failure      409 {object} apierror.APIError "Group already exists"
+// @Failure      500 {object} apierror.APIError "Internal Server Error"
+// @Router       /groups [post]
 func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) error {
 	req, err := httputils.BindAndValidate[CreateGroupRequest](r, h.validate)
 	if err != nil {
@@ -139,14 +173,27 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) error {
 }
 
 type UpdateGroupRequest struct {
-	Name        string `json:"name" validate:"omitempty,max=128"`
-	Description string `json:"description" validate:"omitempty,max=256"`
+	Name        string `json:"name" validate:"omitempty,max=128" example:"Product Updates"`
+	Description string `json:"description" validate:"omitempty,max=256" example:"Product announcements list"`
 }
 
 type UpdateGroupResponse struct {
-	ID string `json:"id"`
+	ID string `json:"id" example:"c790g02f8n90184b23qg"`
 }
 
+// Update godoc
+// @Summary      Update group
+// @Description  Updates an existing receiver group
+// @Tags         groups
+// @Accept       json
+// @Produce      json
+// @Param        id      path     string             true  "Group ID (xid)"
+// @Param        request body     UpdateGroupRequest true  "Group update data"
+// @Success      200     {object} UpdateGroupResponse
+// @Failure      400     {object} apierror.APIError "Bad Request"
+// @Failure      404     {object} apierror.APIError "Group Not Found"
+// @Failure      500     {object} apierror.APIError "Internal Server Error"
+// @Router       /groups/{id} [put]
 func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
@@ -176,6 +223,16 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// Delete godoc
+// @Summary      Delete group
+// @Description  Deletes a receiver group by ID
+// @Tags         groups
+// @Produce      json
+// @Param        id   path   string  true  "Group ID (xid)"
+// @Success      200  "OK"
+// @Failure      400  {object}  apierror.APIError "Bad Request"
+// @Failure      500  {object}  apierror.APIError "Internal Server Error"
+// @Router       /groups/{id} [delete]
 func (h *GroupHandler) Delete(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 	if id == "" {
@@ -192,6 +249,19 @@ func (h *GroupHandler) Delete(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// AddReceiver godoc
+// @Summary      Add receiver to group
+// @Description  Associates an existing receiver with a group
+// @Tags         groups
+// @Produce      json
+// @Param        id          path   string  true  "Group ID (xid)"
+// @Param        receiverId  path   string  true  "Receiver ID (xid)"
+// @Success      200         "OK"
+// @Failure      400         {object}  apierror.APIError "Bad Request"
+// @Failure      404         {object}  apierror.APIError "Group or receiver not found"
+// @Failure      409         {object}  apierror.APIError "Receiver already in group"
+// @Failure      500         {object}  apierror.APIError "Internal Server Error"
+// @Router       /groups/{id}/receivers/{receiverId} [put]
 func (h *GroupHandler) AddReceiver(w http.ResponseWriter, r *http.Request) error {
 	groupId := r.PathValue("id")
 	if groupId == "" {
@@ -212,6 +282,17 @@ func (h *GroupHandler) AddReceiver(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
+// RemoveReceiver godoc
+// @Summary      Remove receiver from group
+// @Description  Removes a receiver from a group
+// @Tags         groups
+// @Produce      json
+// @Param        id          path   string  true  "Group ID (xid)"
+// @Param        receiverId  path   string  true  "Receiver ID (xid)"
+// @Success      200         "OK"
+// @Failure      400         {object}  apierror.APIError "Bad Request"
+// @Failure      500         {object}  apierror.APIError "Internal Server Error"
+// @Router       /groups/{id}/receivers/{receiverId} [delete]
 func (h *GroupHandler) RemoveReceiver(w http.ResponseWriter, r *http.Request) error {
 	groupId := r.PathValue("id")
 	if groupId == "" {
@@ -236,6 +317,19 @@ type ListGroupReceiversResponse struct {
 	Receivers []domain.Receiver `json:"receivers"`
 }
 
+// ListReceivers godoc
+// @Summary      List receivers in group
+// @Description  Get a paginated list of receivers belonging to a specific group
+// @Tags         groups
+// @Produce      json
+// @Param        id      path      string  true   "Group ID (xid)"
+// @Param        limit   query     int     false  "Number of items to return (default 10)"  default(10)
+// @Param        offset  query     int     false  "Number of items to skip (default 0)"     default(0)
+// @Success      200     {object}  ListGroupReceiversResponse
+// @Failure      400     {object}  apierror.APIError "Bad Request"
+// @Failure      404     {object}  apierror.APIError "Group Not Found"
+// @Failure      500     {object}  apierror.APIError "Internal Server Error"
+// @Router       /groups/{id}/receivers [get]
 func (h *GroupHandler) ListReceivers(w http.ResponseWriter, r *http.Request) error {
 	groupId := r.PathValue("id")
 	if groupId == "" {

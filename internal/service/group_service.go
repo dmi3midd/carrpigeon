@@ -16,7 +16,6 @@ var (
 	ErrGroupAlreadyExists     = errors.New("group already exists")
 	ErrGroupNotFound          = errors.New("group not found")
 	ErrReceiverAlreadyInGroup = errors.New("receiver already in group")
-	ErrReceiverNotInGroup     = errors.New("receiver not in group")
 )
 
 type GroupService interface {
@@ -173,22 +172,6 @@ func (s *groupService) AddReceiver(ctx context.Context, groupID, receiverID stri
 
 func (s *groupService) RemoveReceiver(ctx context.Context, groupID, receiverID string) error {
 	op := "GroupService.RemoveReceiver"
-
-	// if _, err := s.groupRepo.GetByID(ctx, groupID); err != nil {
-	// 	if errors.Is(err, repository.ErrNoGroup) {
-	// 		return fmt.Errorf("%s: %w", op, ErrGroupNotFound)
-	// 	}
-	// 	return fmt.Errorf("%s: %w", op, err)
-	// }
-
-	// exists, err := s.groupRepo.IsReceiverInGroup(ctx, groupID, receiverID)
-	// if err != nil {
-	// 	return fmt.Errorf("%s: %w", op, err)
-	// }
-	// if !exists {
-	// 	return fmt.Errorf("%s: %w", op, ErrReceiverNotInGroup)
-	// }
-
 	if err := s.groupRepo.RemoveReceiver(ctx, groupID, receiverID); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

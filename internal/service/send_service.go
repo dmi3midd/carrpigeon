@@ -15,26 +15,18 @@ import (
 	"github.com/rs/xid"
 )
 
-var (
-	ErrFailedToSaveEmail = errors.New("failed to save email")
-)
-
 type SendService interface {
 	// SendSingle sends a single email.
 	// Returns [ErrReceiverNotFound] if receiver not found.
-	// Returns [ErrFailedToSaveEmail] if failed to save email.
 	SendSingle(ctx context.Context, to, subject, body string) error
 	// SendSingleWithTemplate sends an email using a template.
 	// Returns [ErrReceiverNotFound] if receiver not found.
-	// Returns [ErrFailedToSaveEmail] if failed to save email.
 	SendSingleWithTemplate(ctx context.Context, to, subject, templateId string, data interface{}) error
 	// SendGroup sends an email to a group of receivers.
 	// Returns [ErrGroupNotFound] if group not found.
-	// Returns [ErrFailedToSaveEmail] if failed to save email.
 	SendGroup(ctx context.Context, groupId, subject, body string) error
 	// SendGroupWithTemplate sends an email to a group of receivers using a template.
 	// Returns [ErrGroupNotFound] if group not found.
-	// Returns [ErrFailedToSaveEmail] if failed to save email.
 	SendGroupWithTemplate(ctx context.Context, groupId, subject, templateId string, data interface{}) error
 }
 
@@ -132,7 +124,7 @@ func (s *sendService) SendSingle(ctx context.Context, to, subject, body string) 
 	}
 
 	if err := s.emailRepo.Create(ctx, &email); err != nil {
-		return fmt.Errorf("%s: %w", op, ErrFailedToSaveEmail)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return nil
@@ -191,7 +183,7 @@ func (s *sendService) SendSingleWithTemplate(ctx context.Context, to, subject, t
 	}
 
 	if err := s.emailRepo.Create(ctx, &email); err != nil {
-		return fmt.Errorf("%s: %w", op, ErrFailedToSaveEmail)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return nil
@@ -228,7 +220,7 @@ func (s *sendService) SendGroup(ctx context.Context, groupId, subject, body stri
 				LastError:     nil,
 				SentAt:        nil,
 			}); err != nil {
-				return fmt.Errorf("%s: %w", op, ErrFailedToSaveEmail)
+				return fmt.Errorf("%s: %w", op, err)
 			}
 		}
 		return nil
@@ -305,7 +297,7 @@ func (s *sendService) SendGroupWithTemplate(ctx context.Context, groupId, subjec
 				LastError:     nil,
 				SentAt:        nil,
 			}); err != nil {
-				return fmt.Errorf("%s: %w", op, ErrFailedToSaveEmail)
+				return fmt.Errorf("%s: %w", op, err)
 			}
 		}
 		return nil

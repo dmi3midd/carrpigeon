@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -11,15 +10,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-var (
-	ErrFailedToCreateEmail = errors.New("failed to create email")
-	ErrFailedToFetchEmails = errors.New("failed to fetch emails")
-	ErrFailedToUpdateEmail = errors.New("failed to update email")
-)
-
 type EmailRepository interface {
 	// Create creates email in db.
-	// Returns [ErrFailedToCreateEmail] if failed to create email.
 	Create(ctx context.Context, email *domain.Email) error
 	// FetchPending selects pending emails ready for sending, marks them as 'processing' and returns them.
 	FetchPending(ctx context.Context, limit int) ([]domain.Email, error)
@@ -50,7 +42,7 @@ func (r *emailRepository) Create(ctx context.Context, email *domain.Email) error
 	executor := ExtractTx(ctx, r.DB)
 	_, err := sqlx.NamedExecContext(ctx, executor, query, email)
 	if err != nil {
-		return fmt.Errorf("%s: %w: %w", op, ErrFailedToCreateEmail, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 	return nil
 }
@@ -77,7 +69,7 @@ func (r *emailRepository) FetchPending(ctx context.Context, limit int) ([]domain
 	var emails []domain.Email
 	err := sqlx.SelectContext(ctx, executor, &emails, query, limit)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w: %w", op, ErrFailedToFetchEmails, err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return emails, nil
 }
@@ -102,7 +94,7 @@ func (r *emailRepository) ResetProcessing(ctx context.Context, limit int) ([]dom
 	var emails []domain.Email
 	err := sqlx.SelectContext(ctx, executor, &emails, query, limit)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w: %w", op, ErrFailedToUpdateEmail, err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return emails, nil
 }
@@ -117,7 +109,7 @@ func (r *emailRepository) MarkAsSent(ctx context.Context, id string, sentAt time
 	executor := ExtractTx(ctx, r.DB)
 	_, err := executor.ExecContext(ctx, query, id, sentAt)
 	if err != nil {
-		return fmt.Errorf("%s: %w: %w", op, ErrFailedToUpdateEmail, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 	return nil
 }
@@ -135,7 +127,7 @@ func (r *emailRepository) MarkAsFailed(ctx context.Context, id string, attempts 
 	executor := ExtractTx(ctx, r.DB)
 	_, err := executor.ExecContext(ctx, query, id, attempts, nextRetryAt, lastError)
 	if err != nil {
-		return fmt.Errorf("%s: %w: %w", op, ErrFailedToUpdateEmail, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 	return nil
 }
