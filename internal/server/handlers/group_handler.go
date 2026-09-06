@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/dmi3midd/carrpigeon/internal/domain"
 	"github.com/dmi3midd/carrpigeon/internal/service"
+	"github.com/dmi3midd/carrpigeon/internal/shared/httputils"
 	"github.com/dmi3midd/carrpigeon/internal/shared/httputils/apierror"
 
 	"encoding/json"
@@ -115,13 +116,8 @@ type CreateGroupResponse struct {
 }
 
 func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) error {
-	var req CreateGroupRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return err
-	}
-	defer r.Body.Close()
-
-	if err := h.validate.Struct(req); err != nil {
+	req, err := httputils.BindAndValidate[CreateGroupRequest](r, h.validate)
+	if err != nil {
 		return err
 	}
 
@@ -157,18 +153,13 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) error {
 		return apierror.NewBadRequestError(errors.New("id is required"), "Id is required")
 	}
 
-	var req UpdateGroupRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return err
-	}
-	defer r.Body.Close()
-
-	if err := h.validate.Struct(req); err != nil {
+	req, err := httputils.BindAndValidate[UpdateGroupRequest](r, h.validate)
+	if err != nil {
 		return err
 	}
 
 	ctx := r.Context()
-	id, err := h.groupService.Update(ctx, id, req.Name, req.Description)
+	updatedID, err := h.groupService.Update(ctx, id, req.Name, req.Description)
 	if err != nil {
 		return err
 	}
@@ -176,7 +167,7 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	response := &UpdateGroupResponse{
-		ID: id,
+		ID: updatedID,
 	}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		return err

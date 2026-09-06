@@ -8,6 +8,7 @@ import (
 
 	"github.com/dmi3midd/carrpigeon/internal/domain"
 	"github.com/dmi3midd/carrpigeon/internal/service"
+	"github.com/dmi3midd/carrpigeon/internal/shared/httputils"
 	"github.com/dmi3midd/carrpigeon/internal/shared/httputils/apierror"
 
 	"github.com/go-playground/validator/v10"
@@ -111,13 +112,8 @@ type CreateReceiverResponse struct {
 }
 
 func (h *ReceiversHandler) CreateReceiverHandler(w http.ResponseWriter, r *http.Request) error {
-	var req CreateReceiverRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return err
-	}
-	defer r.Body.Close()
-
-	if err := h.validate.Struct(req); err != nil {
+	req, err := httputils.BindAndValidate[CreateReceiverRequest](r, h.validate)
+	if err != nil {
 		return err
 	}
 
@@ -152,13 +148,9 @@ func (h *ReceiversHandler) UpdateReceiverHandler(w http.ResponseWriter, r *http.
 	if id == "" {
 		return apierror.NewBadRequestError(errors.New("id is required"), "Id is required")
 	}
-	var req UpdateReceiverRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return err
-	}
-	defer r.Body.Close()
 
-	if err := h.validate.Struct(req); err != nil {
+	req, err := httputils.BindAndValidate[UpdateReceiverRequest](r, h.validate)
+	if err != nil {
 		return err
 	}
 

@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/dmi3midd/carrpigeon/internal/service"
+	"github.com/dmi3midd/carrpigeon/internal/shared/httputils"
 	"github.com/dmi3midd/carrpigeon/internal/shared/httputils/apierror"
 
 	"github.com/go-playground/validator/v10"
@@ -36,13 +36,8 @@ type SendSingleRequest struct {
 }
 
 func (h *SendHandler) SendSingleHandler(w http.ResponseWriter, r *http.Request) error {
-	var req SendSingleRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return err
-	}
-	defer r.Body.Close()
-
-	if err := h.validate.Struct(req); err != nil {
+	req, err := httputils.BindAndValidate[SendSingleRequest](r, h.validate)
+	if err != nil {
 		return err
 	}
 
@@ -63,13 +58,8 @@ type SendSingleWithTemplateRequest struct {
 }
 
 func (h *SendHandler) SendSingleWithTemplateHandler(w http.ResponseWriter, r *http.Request) error {
-	var req SendSingleWithTemplateRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return err
-	}
-	defer r.Body.Close()
-
-	if err := h.validate.Struct(req); err != nil {
+	req, err := httputils.BindAndValidate[SendSingleWithTemplateRequest](r, h.validate)
+	if err != nil {
 		return err
 	}
 
@@ -89,13 +79,8 @@ type SendGroupRequest struct {
 }
 
 func (h *SendHandler) SendGroupHandler(w http.ResponseWriter, r *http.Request) error {
-	var req SendGroupRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return err
-	}
-	defer r.Body.Close()
-
-	if err := h.validate.Struct(req); err != nil {
+	req, err := httputils.BindAndValidate[SendGroupRequest](r, h.validate)
+	if err != nil {
 		return err
 	}
 
@@ -116,13 +101,8 @@ type SendGroupWithTemplateRequest struct {
 }
 
 func (h *SendHandler) SendGroupWithTemplateHandler(w http.ResponseWriter, r *http.Request) error {
-	var req SendGroupWithTemplateRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return err
-	}
-	defer r.Body.Close()
-
-	if err := h.validate.Struct(req); err != nil {
+	req, err := httputils.BindAndValidate[SendGroupWithTemplateRequest](r, h.validate)
+	if err != nil {
 		return err
 	}
 
