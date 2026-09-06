@@ -334,7 +334,11 @@ paths:
           schema:
             $ref: '#/definitions/handlers.CreateGroupResponse'
         "400":
-          description: Bad Request or validation error
+          description: Validation error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "409":
+          description: Group already exists
           schema:
             $ref: '#/definitions/apierror.APIError'
         "500":
@@ -360,10 +364,6 @@ paths:
           description: OK
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/apierror.APIError'
-        "404":
-          description: Group Not Found
           schema:
             $ref: '#/definitions/apierror.APIError'
         "500":
@@ -505,10 +505,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/apierror.APIError'
-        "404":
-          description: Group or receiver relation not found
-          schema:
-            $ref: '#/definitions/apierror.APIError'
         "500":
           description: Internal Server Error
           schema:
@@ -540,6 +536,10 @@ paths:
             $ref: '#/definitions/apierror.APIError'
         "404":
           description: Group or receiver not found
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "409":
+          description: Receiver already in group
           schema:
             $ref: '#/definitions/apierror.APIError'
         "500":
@@ -620,7 +620,11 @@ paths:
           schema:
             $ref: '#/definitions/handlers.CreateReceiverResponse'
         "400":
-          description: Invalid request or validation failed
+          description: Validation error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "409":
+          description: Receiver already exists
           schema:
             $ref: '#/definitions/apierror.APIError'
         "500":
@@ -646,10 +650,6 @@ paths:
           description: OK
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/apierror.APIError'
-        "404":
-          description: Receiver Not Found
           schema:
             $ref: '#/definitions/apierror.APIError'
         "500":
@@ -713,7 +713,7 @@ paths:
           schema:
             $ref: '#/definitions/handlers.UpdateReceiverResponse'
         "400":
-          description: Bad Request
+          description: Validation error
           schema:
             $ref: '#/definitions/apierror.APIError'
         "404":
@@ -783,7 +783,7 @@ paths:
           schema:
             $ref: '#/definitions/apierror.APIError'
         "404":
-          description: Group or template not found
+          description: Group not found
           schema:
             $ref: '#/definitions/apierror.APIError'
         "500":
@@ -811,7 +811,11 @@ paths:
         "202":
           description: Accepted
         "400":
-          description: Bad Request or validation error
+          description: Validation error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "404":
+          description: Receiver not found
           schema:
             $ref: '#/definitions/apierror.APIError'
         "500":
@@ -840,11 +844,11 @@ paths:
         "202":
           description: Accepted
         "400":
-          description: Bad Request or validation error
+          description: Validation error
           schema:
             $ref: '#/definitions/apierror.APIError'
         "404":
-          description: Template not found
+          description: Receiver not found
           schema:
             $ref: '#/definitions/apierror.APIError'
         "500":
@@ -909,7 +913,7 @@ paths:
           schema:
             $ref: '#/definitions/handlers.CreateTemplateResponse'
         "400":
-          description: Bad Request or missing fields
+          description: Invalid file type or missing fields
           schema:
             $ref: '#/definitions/apierror.APIError'
         "500":
@@ -935,10 +939,6 @@ paths:
           description: OK
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/apierror.APIError'
-        "404":
-          description: Template Not Found
           schema:
             $ref: '#/definitions/apierror.APIError'
         "500":
@@ -1006,7 +1006,7 @@ paths:
           schema:
             $ref: '#/definitions/handlers.UpdateTemplateResponse'
         "400":
-          description: Bad Request
+          description: Invalid file type or missing fields
           schema:
             $ref: '#/definitions/apierror.APIError'
         "404":

@@ -1,0 +1,1056 @@
+{
+	"info": {
+		"_postman_id": "c790g02f-8n90-184b-23qg-carrpigeon001",
+		"name": "Carrpigeon API",
+		"description": "Comprehensive Postman collection for the Carrpigeon email distribution and template service API with automated test scripts and variable propagation.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:2500",
+			"type": "string"
+		},
+		{
+			"key": "receiverId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "receiverEmail",
+			"value": "test-subscriber@example.com",
+			"type": "string"
+		},
+		{
+			"key": "receiverName",
+			"value": "John Doe",
+			"type": "string"
+		},
+		{
+			"key": "groupId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "groupName",
+			"value": "Marketing Subscribers",
+			"type": "string"
+		},
+		{
+			"key": "templateId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Check Health Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable (< 1000ms)\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"",
+									"pm.test(\"Database status is healthy\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"up\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Checks the application and database health status."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Receivers",
+			"item": [
+				{
+					"name": "Create Receiver",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const timestamp = Date.now();",
+									"pm.collectionVariables.set(\"receiverEmail\", `user-${timestamp}@example.com`);",
+									"pm.collectionVariables.set(\"receiverName\", `Test User ${timestamp}`);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 202 (Accepted)\", function () {",
+									"    pm.response.to.have.status(202);",
+									"});",
+									"",
+									"pm.test(\"Receiver ID returned and stored\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.be.a(\"string\");",
+									"    pm.expect(jsonData.id.length).to.be.above(0);",
+									"    pm.collectionVariables.set(\"receiverId\", jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{receiverName}}\",\n    \"email\": \"{{receiverEmail}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/receivers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"receivers"
+							]
+						},
+						"description": "Creates a new email receiver and automatically stores receiverId in collection variables."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Receiver by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Receiver details match\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.receiver).to.be.an(\"object\");",
+									"    pm.expect(jsonData.receiver.id).to.eql(pm.collectionVariables.get(\"receiverId\"));",
+									"    pm.expect(jsonData.receiver.email).to.eql(pm.collectionVariables.get(\"receiverEmail\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/receivers/{{receiverId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"receivers",
+								"{{receiverId}}"
+							]
+						},
+						"description": "Retrieves receiver details by ID using stored receiverId."
+					},
+					"response": []
+				},
+				{
+					"name": "List Receivers",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Receivers array is returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.receivers).to.be.an(\"array\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/receivers?limit=10&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"receivers"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Returns a paginated list of email receivers."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Receiver",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Updated receiver ID returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.eql(pm.collectionVariables.get(\"receiverId\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated {{receiverName}}\",\n    \"email\": \"{{receiverEmail}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/receivers/{{receiverId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"receivers",
+								"{{receiverId}}"
+							]
+						},
+						"description": "Updates an existing receiver's name or email."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Receiver",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/receivers/{{receiverId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"receivers",
+								"{{receiverId}}"
+							]
+						},
+						"description": "Deletes an email receiver by ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Groups",
+			"item": [
+				{
+					"name": "Create Group",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const timestamp = Date.now();",
+									"pm.collectionVariables.set(\"groupName\", `Group ${timestamp}`);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Group ID returned and stored\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.be.a(\"string\");",
+									"    pm.expect(jsonData.id.length).to.be.above(0);",
+									"    pm.collectionVariables.set(\"groupId\", jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{groupName}}\",\n    \"description\": \"Automated test group for newsletters\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/groups",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"groups"
+							]
+						},
+						"description": "Creates a new receiver group and saves groupId in collection variables."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Group by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Group details match\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.group).to.be.an(\"object\");",
+									"    pm.expect(jsonData.group.id).to.eql(pm.collectionVariables.get(\"groupId\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/groups/{{groupId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"groups",
+								"{{groupId}}"
+							]
+						},
+						"description": "Retrieves group details by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "List Groups",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Groups list returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.groups).to.be.an(\"array\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/groups?limit=10&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"groups"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Returns a paginated list of receiver groups."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Group",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Group ID matches\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.eql(pm.collectionVariables.get(\"groupId\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated {{groupName}}\",\n    \"description\": \"Updated group description\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/groups/{{groupId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"groups",
+								"{{groupId}}"
+							]
+						},
+						"description": "Updates an existing receiver group's name and description."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Receiver to Group",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/groups/{{groupId}}/receivers/{{receiverId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"groups",
+								"{{groupId}}",
+								"receivers",
+								"{{receiverId}}"
+							]
+						},
+						"description": "Associates an existing receiver with a group."
+					},
+					"response": []
+				},
+				{
+					"name": "List Receivers in Group",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Receivers array returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.receivers).to.be.an(\"array\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/groups/{{groupId}}/receivers?limit=10&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"groups",
+								"{{groupId}}",
+								"receivers"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Returns a paginated list of receivers belonging to the group."
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Receiver from Group",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/groups/{{groupId}}/receivers/{{receiverId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"groups",
+								"{{groupId}}",
+								"receivers",
+								"{{receiverId}}"
+							]
+						},
+						"description": "Removes a receiver from the group."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Group",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/groups/{{groupId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"groups",
+								"{{groupId}}"
+							]
+						},
+						"description": "Deletes a receiver group by ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Templates",
+			"item": [
+				{
+					"name": "Upload Template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 202 (Accepted)\", function () {",
+									"    pm.response.to.have.status(202);",
+									"});",
+									"",
+									"pm.test(\"Template ID returned and stored\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.be.a(\"string\");",
+									"    pm.expect(jsonData.id.length).to.be.above(0);",
+									"    pm.collectionVariables.set(\"templateId\", jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Welcome Notification Template",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"description": "Select docs/postman/test_template.html or any .html / .txt template file",
+									"type": "file",
+									"src": "docs/postman/test_template.html"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/templates",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"templates"
+							]
+						},
+						"description": "Uploads and saves a new HTML/TXT template file. In Postman, select docs/postman/test_template.html for the 'file' parameter."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Raw Template by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Template details match\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.template).to.be.an(\"object\");",
+									"    pm.expect(jsonData.template.id).to.eql(pm.collectionVariables.get(\"templateId\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/templates/{{templateId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"templates",
+								"{{templateId}}"
+							]
+						},
+						"description": "Retrieves the raw content and metadata of a template by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "List Templates Metadata",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Templates array is returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.templates).to.be.an(\"array\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/templates?limit=10&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"templates"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Returns a paginated list of email templates metadata."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Updated template ID matches\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.eql(pm.collectionVariables.get(\"templateId\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Updated Welcome Template",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "docs/postman/test_template.html"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/templates/{{templateId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"templates",
+								"{{templateId}}"
+							]
+						},
+						"description": "Updates an existing template's name and file content."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (OK)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/templates/{{templateId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"templates",
+								"{{templateId}}"
+							]
+						},
+						"description": "Deletes an email template by ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Send Email",
+			"item": [
+				{
+					"name": "Send Single Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 202 (Accepted)\", function () {",
+									"    pm.response.to.have.status(202);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"to\": \"{{receiverEmail}}\",\n    \"subject\": \"Welcome to Carrpigeon!\",\n    \"body\": \"Hello, this is a plain text notification sent via Carrpigeon service.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/send/single",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"send",
+								"single"
+							]
+						},
+						"description": "Queues a single plain-text email to an existing receiver."
+					},
+					"response": []
+				},
+				{
+					"name": "Send Single with Template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 202 (Accepted)\", function () {",
+									"    pm.response.to.have.status(202);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"to\": \"{{receiverEmail}}\",\n    \"subject\": \"Special Promo Code For You!\",\n    \"template_id\": \"{{templateId}}\",\n    \"data\": {\n        \"Name\": \"{{receiverName}}\",\n        \"PromoCode\": \"CARRPIGEON-2026\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/send/single/template",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"send",
+								"single",
+								"template"
+							]
+						},
+						"description": "Renders template with provided data and queues an email to a single receiver."
+					},
+					"response": []
+				},
+				{
+					"name": "Send Group Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 202 (Accepted)\", function () {",
+									"    pm.response.to.have.status(202);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"group_id\": \"{{groupId}}\",\n    \"subject\": \"Important Team Announcement\",\n    \"body\": \"Hello team, this is an automated announcement broadcast to all group members.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/send/group",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"send",
+								"group"
+							]
+						},
+						"description": "Queues a plain-text email to all active members of the specified group."
+					},
+					"response": []
+				},
+				{
+					"name": "Send Group with Template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 202 (Accepted)\", function () {",
+									"    pm.response.to.have.status(202);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"group_id\": \"{{groupId}}\",\n    \"subject\": \"Weekly Newsletter & Promo\",\n    \"template_id\": \"{{templateId}}\",\n    \"data\": {\n        \"Name\": \"Subscriber\",\n        \"PromoCode\": \"GROUP-VIP-2026\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/send/group/template",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"send",
+								"group",
+								"template"
+							]
+						},
+						"description": "Renders a template and queues personalized emails to all members of the specified group."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

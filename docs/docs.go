@@ -93,7 +93,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request or validation error",
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/apierror.APIError"
+                        }
+                    },
+                    "409": {
+                        "description": "Group already exists",
                         "schema": {
                             "$ref": "#/definitions/apierror.APIError"
                         }
@@ -238,12 +244,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/apierror.APIError"
                         }
                     },
-                    "404": {
-                        "description": "Group Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/apierror.APIError"
-                        }
-                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -356,6 +356,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/apierror.APIError"
                         }
                     },
+                    "409": {
+                        "description": "Receiver already in group",
+                        "schema": {
+                            "$ref": "#/definitions/apierror.APIError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -395,12 +401,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/apierror.APIError"
-                        }
-                    },
-                    "404": {
-                        "description": "Group or receiver relation not found",
                         "schema": {
                             "$ref": "#/definitions/apierror.APIError"
                         }
@@ -521,7 +521,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Invalid request or validation failed",
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/apierror.APIError"
+                        }
+                    },
+                    "409": {
+                        "description": "Receiver already exists",
                         "schema": {
                             "$ref": "#/definitions/apierror.APIError"
                         }
@@ -619,7 +625,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/apierror.APIError"
                         }
@@ -662,12 +668,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/apierror.APIError"
-                        }
-                    },
-                    "404": {
-                        "description": "Receiver Not Found",
                         "schema": {
                             "$ref": "#/definitions/apierror.APIError"
                         }
@@ -765,7 +765,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Group or template not found",
+                        "description": "Group not found",
                         "schema": {
                             "$ref": "#/definitions/apierror.APIError"
                         }
@@ -808,7 +808,13 @@ const docTemplate = `{
                         "description": "Accepted"
                     },
                     "400": {
-                        "description": "Bad Request or validation error",
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/apierror.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Receiver not found",
                         "schema": {
                             "$ref": "#/definitions/apierror.APIError"
                         }
@@ -851,13 +857,13 @@ const docTemplate = `{
                         "description": "Accepted"
                     },
                     "400": {
-                        "description": "Bad Request or validation error",
+                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/apierror.APIError"
                         }
                     },
                     "404": {
-                        "description": "Template not found",
+                        "description": "Receiver not found",
                         "schema": {
                             "$ref": "#/definitions/apierror.APIError"
                         }
@@ -954,7 +960,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request or missing fields",
+                        "description": "Invalid file type or missing fields",
                         "schema": {
                             "$ref": "#/definitions/apierror.APIError"
                         }
@@ -1057,7 +1063,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid file type or missing fields",
                         "schema": {
                             "$ref": "#/definitions/apierror.APIError"
                         }
@@ -1100,12 +1106,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/apierror.APIError"
-                        }
-                    },
-                    "404": {
-                        "description": "Template Not Found",
                         "schema": {
                             "$ref": "#/definitions/apierror.APIError"
                         }
