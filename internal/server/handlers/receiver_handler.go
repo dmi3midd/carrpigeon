@@ -140,7 +140,7 @@ type CreateReceiverResponse struct {
 // @Accept       json
 // @Produce      json
 // @Param        request body CreateReceiverRequest true "Receiver creation data"
-// @Success      202 {object} CreateReceiverResponse
+// @Success      200 {object} CreateReceiverResponse
 // @Failure      400 {object} apierror.APIError "Validation error"
 // @Failure      409 {object} apierror.APIError "Receiver already exists"
 // @Failure      500 {object} apierror.APIError "Internal Server Error"
@@ -158,7 +158,7 @@ func (h *ReceiversHandler) CreateReceiverHandler(w http.ResponseWriter, r *http.
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusOK)
 	response := &CreateReceiverResponse{
 		ID: id,
 	}

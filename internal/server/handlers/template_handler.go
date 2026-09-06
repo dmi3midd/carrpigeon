@@ -130,7 +130,7 @@ type CreateTemplateResponse struct {
 // @Produce      json
 // @Param        name formData string true "Template name"
 // @Param        file formData file   true "Template file (.html or .txt)"
-// @Success      202  {object} CreateTemplateResponse
+// @Success      200  {object} CreateTemplateResponse
 // @Failure      400  {object} apierror.APIError "Invalid file type or missing fields"
 // @Failure      500  {object} apierror.APIError "Internal Server Error"
 // @Router       /templates [post]
@@ -157,7 +157,7 @@ func (h *TemplateHandler) CreateTemplateHandler(w http.ResponseWriter, r *http.R
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusOK)
 	response := &CreateTemplateResponse{ID: id}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		return err

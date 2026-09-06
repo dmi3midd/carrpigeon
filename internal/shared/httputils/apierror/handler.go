@@ -22,9 +22,16 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error) {
 	var apiErr APIError
 
 	if errors.As(mappedErr, &apiErr) {
-		slog.Error(
-			"failed to response",
-			slog.String("error", apiErr.Error()),
+		level := slog.LevelWarn
+		if apiErr.Code >= 500 {
+			level = slog.LevelError
+		}
+
+		slog.Log(r.Context(), level, "request error",
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+			slog.Int("status", apiErr.Code),
+			slog.String("error", apiErr.SysMessage),
 		)
 
 		userErr := UserError{
@@ -35,14 +42,21 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error) {
 
 		bytesErr, err := json.Marshal(userErr)
 		if err != nil {
-			bytesErr = []byte("Internal server error")
+			bytesErr = []byte(`{"code":500,"message":"Internal server error"}`)
 		}
-		w.Header().Set("Content-Type", "text/plain")
-		http.Error(w,
-			string(bytesErr),
-			apiErr.Code)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(apiErr.Code)
+		_, _ = w.Write(bytesErr)
 		return
 	}
 
-	http.Error(w, "Internal server error", http.StatusInternalServerError)
+	slog.Error("unhandled server error",
+		slog.String("method", r.Method),
+		slog.String("path", r.URL.Path),
+		slog.String("error", err.Error()),
+	)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusInternalServerError)
+	_, _ = w.Write([]byte(`{"code":500,"message":"Internal server error"}`))
 }

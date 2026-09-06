@@ -23,6 +23,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	s.templateHandler.RegisterRoutes(mux)
 	s.groupHandler.RegisterRoutes(mux)
 
-	// Wrap the mux with CORS middleware
-	return s.middlewares.CorsMiddleware(mux)
+	// Wrap the mux with Logging and CORS middleware
+	handler := s.middlewares.LoggingMiddleware(mux)
+	return s.middlewares.CorsMiddleware(handler)
 }
