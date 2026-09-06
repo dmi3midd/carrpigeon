@@ -93,10 +93,11 @@ func main() {
 	emailRepository := repository.NewEmailRepository(db.GetDB())
 	emailReceiverRepository := repository.NewReceiverRepository(db.GetDB())
 	groupRepository := repository.NewGroupRepository(db.GetDB())
+	txManager := repository.NewTxManager(db.GetDB())
 
 	templateService := service.NewTemplateService(templateRepository, parsedHtmlTmplCache, parsedTxtTmplCache, domainTmplCache)
 	emailClient := client.NewEmailClient(&cfg.Email.SMTP)
-	emailService := service.NewEmailService(emailClient, emailRepository, emailReceiverRepository, templateService, &cfg.Email.SMTP)
+	emailService := service.NewEmailService(emailClient, emailRepository, emailReceiverRepository, groupRepository, txManager, templateService, &cfg.Email.SMTP)
 	emailReceiverService := service.NewReceiverService(emailReceiverRepository)
 	groupService := service.NewGroupService(groupRepository, emailReceiverRepository)
 

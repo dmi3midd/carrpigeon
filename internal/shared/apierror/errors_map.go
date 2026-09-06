@@ -6,9 +6,6 @@ import (
 )
 
 var ErrorMap = map[error]func(err error) error{
-	service.ErrFailedToSendEmail: func(err error) error {
-		return NewInternalServerError(err)
-	},
 	service.ErrFailedToSaveEmail: func(err error) error {
 		return NewInternalServerError(err)
 	},
@@ -36,9 +33,9 @@ var ErrorMap = map[error]func(err error) error{
 	service.ErrReceiverAlreadyInGroup: func(err error) error {
 		return NewConflictError(err, "Receiver already in group")
 	},
-	service.ErrReceiverNotInGroup: func(err error) error {
-		return NewNotFoundError(err, "Receiver not in group")
-	},
+	// service.ErrReceiverNotInGroup: func(err error) error {
+	// 	return NewNotFoundError(err, "Receiver not in group")
+	// },
 }
 
 func MapError(err error) error {

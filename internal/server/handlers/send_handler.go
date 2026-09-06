@@ -4,7 +4,6 @@ import (
 	"carrpigeo/internal/service"
 	"carrpigeo/internal/shared/apierror"
 	"encoding/json"
-	"errors"
 	"net/http"
 )
 
@@ -19,25 +18,27 @@ func NewSendHandler(emailService service.EmailService) *SendHandler {
 }
 
 func (h *SendHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("POST /send/email", apierror.ErrorHandler(h.SendEmailHandler))
-	mux.HandleFunc("POST /send/email/template", apierror.ErrorHandler(h.SendEmailWithTemplateHandler))
+	mux.HandleFunc("POST /send/single", apierror.ErrorHandler(h.SendSingleHandler))
+	mux.HandleFunc("POST /send/single/template", apierror.ErrorHandler(h.SendSingleWithTemplateHandler))
+	mux.HandleFunc("POST /send/group", apierror.ErrorHandler(h.SendGroupHandler))
+	mux.HandleFunc("POST /send/group/template", apierror.ErrorHandler(h.SendGroupWithTemplateHandler))
 }
 
-type EmailRequest struct {
+type SendSingleRequest struct {
 	To      string `json:"to"`
 	Subject string `json:"subject"`
 	Body    string `json:"body"`
 }
 
-func (h *SendHandler) SendEmailHandler(w http.ResponseWriter, r *http.Request) error {
-	var req EmailRequest
+func (h *SendHandler) SendSingleHandler(w http.ResponseWriter, r *http.Request) error {
+	var req SendSingleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return err
 	}
 	defer r.Body.Close()
 
 	ctx := r.Context()
-	if err := h.emailService.Send(ctx, req.To, req.Subject, req.Body); err != nil {
+	if err := h.emailService.SendSingle(ctx, req.To, req.Subject, req.Body); err != nil {
 		return err
 	}
 
@@ -45,29 +46,67 @@ func (h *SendHandler) SendEmailHandler(w http.ResponseWriter, r *http.Request) e
 	return nil
 }
 
-type SendEmailWithTemplateRequest struct {
+type SendSingleWithTemplateRequest struct {
 	To         string      `json:"to"`
 	Subject    string      `json:"subject"`
 	TemplateID string      `json:"template_id"`
 	Data       interface{} `json:"data"`
 }
 
-func (h *SendHandler) SendEmailWithTemplateHandler(w http.ResponseWriter, r *http.Request) error {
-	var req SendEmailWithTemplateRequest
+func (h *SendHandler) SendSingleWithTemplateHandler(w http.ResponseWriter, r *http.Request) error {
+	var req SendSingleWithTemplateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return err
 	}
 	defer r.Body.Close()
 
-	if req.To == "" {
-		return apierror.NewBadRequestError(errors.New("to is required"), "To is required")
-	}
-	if req.TemplateID == "" {
-		return apierror.NewBadRequestError(errors.New("template ID is required"), "Template ID is required")
+	ctx := r.Context()
+	if err := h.emailService.SendSingleWithTemplate(ctx, req.To, req.Subject, req.TemplateID, req.Data); err != nil {
+		return err
 	}
 
+	w.WriteHeader(http.StatusAccepted)
+	return nil
+}
+
+type SendGroupRequest struct {
+	GroupID string `json:"group_id"`
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
+}
+
+func (h *SendHandler) SendGroupHandler(w http.ResponseWriter, r *http.Request) error {
+	var req SendGroupRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
 	ctx := r.Context()
-	if err := h.emailService.SendWithTemplate(ctx, req.To, req.Subject, req.TemplateID, req.Data); err != nil {
+	if err := h.emailService.SendGroup(ctx, req.GroupID, req.Subject, req.Body); err != nil {
+		return err
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+	return nil
+}
+
+type SendGroupWithTemplateRequest struct {
+	GroupID    string      `json:"group_id"`
+	Subject    string      `json:"subject"`
+	TemplateID string      `json:"template_id"`
+	Data       interface{} `json:"data"`
+}
+
+func (h *SendHandler) SendGroupWithTemplateHandler(w http.ResponseWriter, r *http.Request) error {
+	var req SendGroupWithTemplateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	ctx := r.Context()
+	if err := h.emailService.SendGroupWithTemplate(ctx, req.GroupID, req.Subject, req.TemplateID, req.Data); err != nil {
 		return err
 	}
 
