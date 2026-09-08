@@ -5,10 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/dmi3midd/carrpigeon/internal/domain"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 var (
@@ -45,6 +47,60 @@ func NewTemplateRepository(db *sqlx.DB) TemplateRepository {
 	}
 }
 
+type templateDB struct {
+	ID        string         `db:"id"`
+	Name      string         `db:"name"`
+	Content   string         `db:"content"`
+	IsHTML    bool           `db:"is_html"`
+	Fields    pq.StringArray `db:"fields"`
+	CreatedAt time.Time      `db:"created_at"`
+	UpdatedAt time.Time      `db:"updated_at"`
+}
+
+func (t *templateDB) toDomain() *domain.Template {
+	return &domain.Template{
+		ID:        t.ID,
+		Name:      t.Name,
+		Content:   t.Content,
+		IsHTML:    t.IsHTML,
+		Fields:    []string(t.Fields),
+		CreatedAt: t.CreatedAt,
+		UpdatedAt: t.UpdatedAt,
+	}
+}
+
+func fromDomain(t *domain.Template) *templateDB {
+	return &templateDB{
+		ID:        t.ID,
+		Name:      t.Name,
+		Content:   t.Content,
+		IsHTML:    t.IsHTML,
+		Fields:    pq.StringArray(t.Fields),
+		CreatedAt: t.CreatedAt,
+		UpdatedAt: t.UpdatedAt,
+	}
+}
+
+type templateMetadataDB struct {
+	ID        string         `db:"id"`
+	Name      string         `db:"name"`
+	IsHTML    bool           `db:"is_html"`
+	Fields    pq.StringArray `db:"fields"`
+	CreatedAt time.Time      `db:"created_at"`
+	UpdatedAt time.Time      `db:"updated_at"`
+}
+
+func (m *templateMetadataDB) toDomain() domain.TemplateMetadata {
+	return domain.TemplateMetadata{
+		ID:        m.ID,
+		Name:      m.Name,
+		IsHTML:    m.IsHTML,
+		Fields:    []string(m.Fields),
+		CreatedAt: m.CreatedAt,
+		UpdatedAt: m.UpdatedAt,
+	}
+}
+
 func (r *templateRepository) GetByID(ctx context.Context, id string) (*domain.Template, error) {
 	op := "TemplateRepository.GetByID"
 	query := `
@@ -53,15 +109,15 @@ func (r *templateRepository) GetByID(ctx context.Context, id string) (*domain.Te
 	WHERE id = $1
 	`
 	executor := ExtractTx(ctx, r.db)
-	var tmpl domain.Template
-	err := sqlx.GetContext(ctx, executor, &tmpl, query, id)
+	var dbTmpl templateDB
+	err := sqlx.GetContext(ctx, executor, &dbTmpl, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("%s: %w", op, ErrNoTemplate)
 		}
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	return &tmpl, nil
+	return dbTmpl.toDomain(), nil
 }
 
 func (r *templateRepository) GetMetadataByID(ctx context.Context, id string) (*domain.TemplateMetadata, error) {
@@ -72,15 +128,16 @@ func (r *templateRepository) GetMetadataByID(ctx context.Context, id string) (*d
         WHERE id = $1
     `
 	executor := ExtractTx(ctx, r.db)
-	var meta domain.TemplateMetadata
-	err := sqlx.GetContext(ctx, executor, &meta, query, id)
+	var dbMeta templateMetadataDB
+	err := sqlx.GetContext(ctx, executor, &dbMeta, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("%s: %w", op, ErrNoTemplate)
 		}
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	return &meta, nil
+	res := dbMeta.toDomain()
+	return &res, nil
 }
 
 func (r *templateRepository) GetMetadataByName(ctx context.Context, name string) (*domain.TemplateMetadata, error) {
@@ -91,15 +148,16 @@ func (r *templateRepository) GetMetadataByName(ctx context.Context, name string)
         WHERE name = $1
     `
 	executor := ExtractTx(ctx, r.db)
-	var meta domain.TemplateMetadata
-	err := sqlx.GetContext(ctx, executor, &meta, query, name)
+	var dbMeta templateMetadataDB
+	err := sqlx.GetContext(ctx, executor, &dbMeta, query, name)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("%s: %w", op, ErrNoTemplate)
 		}
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	return &meta, nil
+	res := dbMeta.toDomain()
+	return &res, nil
 }
 
 func (r *templateRepository) List(ctx context.Context, limit, offset int) ([]domain.TemplateMetadata, error) {
@@ -111,10 +169,14 @@ func (r *templateRepository) List(ctx context.Context, limit, offset int) ([]dom
 	LIMIT $1 OFFSET $2
 	`
 	executor := ExtractTx(ctx, r.db)
-	templates := make([]domain.TemplateMetadata, 0)
-	err := sqlx.SelectContext(ctx, executor, &templates, query, limit, offset)
+	var dbTemplates []templateMetadataDB
+	err := sqlx.SelectContext(ctx, executor, &dbTemplates, query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	templates := make([]domain.TemplateMetadata, len(dbTemplates))
+	for i, dbItem := range dbTemplates {
+		templates[i] = dbItem.toDomain()
 	}
 	return templates, nil
 }
@@ -126,7 +188,8 @@ func (r *templateRepository) Create(ctx context.Context, template *domain.Templa
 	VALUES (:id, :name, :content, :is_html, :fields, :created_at, :updated_at)
 	`
 	executor := ExtractTx(ctx, r.db)
-	_, err := sqlx.NamedExecContext(ctx, executor, query, template)
+	dbTmpl := fromDomain(template)
+	_, err := sqlx.NamedExecContext(ctx, executor, query, dbTmpl)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -141,7 +204,8 @@ func (r *templateRepository) Update(ctx context.Context, template *domain.Templa
 	WHERE id = :id
 	`
 	executor := ExtractTx(ctx, r.db)
-	_, err := sqlx.NamedExecContext(ctx, executor, query, template)
+	dbTmpl := fromDomain(template)
+	_, err := sqlx.NamedExecContext(ctx, executor, query, dbTmpl)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

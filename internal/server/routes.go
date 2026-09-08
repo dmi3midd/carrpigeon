@@ -23,6 +23,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	s.templateHandler.RegisterRoutes(mux)
 	s.groupHandler.RegisterRoutes(mux)
 
+	// Static web UI routes (SPA fallback)
+	s.RegisterStaticRoutes(mux)
+
 	// Wrap the mux with Logging and CORS middleware
 	handler := s.middlewares.LoggingMiddleware(mux)
 	return s.middlewares.CorsMiddleware(handler)
