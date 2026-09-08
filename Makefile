@@ -62,16 +62,31 @@ docker-down-v:
 
 # Docker: Follow application logs
 docker-logs:
-	@docker compose logs -f carrpigeon
+	@docker compose logs -f api
 
 # Docker: Restart application container
 docker-restart:
-	@docker compose restart carrpigeon
+	@docker compose restart api
 
 # Generate Swagger documentation
 swagger:
 	@echo "Generating swagger docs..."
 	@swag init -g main.go -d cmd/api,internal/server/handlers,internal/domain,internal/shared/httputils/apierror --parseInternal
+
+# Web UI: Development server with proxy
+ui-dev:
+	@echo "Starting web UI dev server on http://localhost:5173..."
+	@cd webui && npm run dev
+
+# Web UI: Production build
+ui-build:
+	@echo "Building web UI production bundle..."
+	@cd webui && npm run build
+
+# Web UI: Run unit tests
+ui-test:
+	@echo "Running web UI tests..."
+	@cd webui && npm test
 
 # Help
 help:
@@ -81,6 +96,9 @@ help:
 	@echo "  make build          - Build binary locally"
 	@echo "  make watch          - Run with live-reload (air)"
 	@echo "  make test           - Run tests"
+	@echo "  make ui-dev         - Run Web UI dev server (Vite)"
+	@echo "  make ui-build       - Build Web UI for production"
+	@echo "  make ui-test        - Run Web UI unit tests (Vitest)"
 	@echo "  make swagger        - Generate Swagger API documentation"
 	@echo "  make tidy           - Run go mod tidy"
 	@echo "  make clean          - Remove built binary"
@@ -91,4 +109,4 @@ help:
 	@echo "  make docker-logs    - Follow application logs in Docker"
 	@echo "  make docker-restart - Restart application container"
 
-.PHONY: setup build run test swagger tidy clean watch docker-build docker-run docker-down docker-down-v docker-logs docker-restart help
+.PHONY: setup build run test swagger tidy clean watch docker-build docker-run docker-down docker-down-v docker-logs docker-restart ui-dev ui-build ui-test help

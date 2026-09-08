@@ -34,3 +34,6 @@ docker-compose.yaml
 
 # Config (mounted at runtime)
 config.yaml
+
+# Frontend dependencies
+webui/node_modules/

@@ -1,0 +1,101 @@
+.container {
+  position: fixed;
+  bottom: 50px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 999;
+  max-width: 380px;
+  width: calc(100% - 32px);
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  background: var(--term-surface);
+  border: 1px solid var(--term-border);
+  padding: 8px 12px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  animation: slideIn 0.15s ease-out;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.typeLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.time {
+  font-size: 10.5px;
+  color: var(--term-muted);
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: var(--term-muted);
+  font-size: 12px;
+  padding: 0 4px;
+}
+
+.closeBtn:hover {
+  color: var(--term-plain);
+}
+
+.text {
+  font-size: 12px;
+  color: var(--term-plain);
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.info {
+  border-left: 3px solid var(--term-cyan);
+}
+.info .typeLabel {
+  color: var(--term-cyan);
+}
+
+.success {
+  border-left: 3px solid var(--term-green);
+}
+.success .typeLabel {
+  color: var(--term-green);
+}
+
+.warn {
+  border-left: 3px solid var(--term-amber);
+}
+.warn .typeLabel {
+  color: var(--term-amber);
+}
+
+.error {
+  border-left: 3px solid var(--term-red);
+}
+.error .typeLabel {
+  color: var(--term-red);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

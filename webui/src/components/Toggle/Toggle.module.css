@@ -1,0 +1,30 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--term-plain);
+  cursor: pointer;
+}
+
+.toggleBtn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border: 1px solid var(--term-border);
+  background: var(--term-surface);
+  color: var(--term-muted);
+  border-radius: 2px;
+}
+
+.toggleBtn.checked {
+  color: var(--term-green);
+  border-color: var(--term-green);
+  background: rgba(126, 217, 87, 0.1);
+}
