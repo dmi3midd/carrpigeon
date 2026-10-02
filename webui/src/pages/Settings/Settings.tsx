@@ -1,21 +1,13 @@
 import React from 'react'
 import styles from './Settings.module.css'
 import { AsciiCard } from '../../components/AsciiCard/AsciiCard'
-import { Toggle } from '../../components/Toggle/Toggle'
 import { Badge } from '../../components/Badge/Badge'
 import { useSettingsStore, type TerminalTheme } from '../../stores/useSettingsStore'
 import { useHealthStore } from '../../stores/useHealthStore'
 import { useUiStore } from '../../stores/useUiStore'
 
 export const Settings: React.FC = () => {
-  const {
-    theme,
-    setTheme,
-    autoRefresh,
-    setAutoRefresh,
-    refreshIntervalSeconds,
-    setRefreshIntervalSeconds,
-  } = useSettingsStore()
+  const { theme, setTheme } = useSettingsStore()
 
   const { data: health, fetchHealth } = useHealthStore()
   const { addToast } = useUiStore()
@@ -34,7 +26,6 @@ export const Settings: React.FC = () => {
       sample: '#f6f8fa / #1a7f37',
     },
   ]
-
 
   const handlePing = async () => {
     await fetchHealth()
@@ -80,73 +71,45 @@ export const Settings: React.FC = () => {
         </div>
       </AsciiCard>
 
-      {/* Connectivity & Auto-Refresh */}
-      <div className={styles.twoCol}>
-        <AsciiCard title="Backend API & Documentation">
-          <div className={styles.configList}>
-            <div className={styles.configItem}>
-              <span className={styles.configLabel}>API Base URL:</span>
-              <span className={styles.configValue}>
-                <code>http://localhost:2500</code> (relative <code>/</code>)
-              </span>
-            </div>
-            <div className={styles.configItem}>
-              <span className={styles.configLabel}>Swagger Documentation:</span>
-              <span className={styles.configValue}>
-                <a
-                  href="/swagger/index.html"
-                  target="_blank"
-                  rel="noreferrer"
-                  className={styles.swaggerLink}
-                >
-                  [ Open /swagger/index.html &gt; ]
-                </a>
-              </span>
-            </div>
-            <div className={styles.configItem}>
-              <span className={styles.configLabel}>Backend Status:</span>
-              <span className={styles.configValue}>
-                <Badge variant={health?.status === 'up' ? 'green' : 'red'}>
-                  {health?.status === 'up' ? 'ONLINE (200 OK)' : 'OFFLINE'}
-                </Badge>
-                <button
-                  type="button"
-                  onClick={handlePing}
-                  className={styles.pingBtn}
-                >
-                  [ Ping ]
-                </button>
-              </span>
-            </div>
+      {/* Backend API & Documentation */}
+      <AsciiCard title="Backend API & Documentation">
+        <div className={styles.configList}>
+          <div className={styles.configItem}>
+            <span className={styles.configLabel}>API Base URL:</span>
+            <span className={styles.configValue}>
+              <code>http://localhost:2500</code> (relative <code>/</code>)
+            </span>
           </div>
-        </AsciiCard>
-
-        <AsciiCard title="Auto-Refresh & Polling">
-          <div className={styles.configList}>
-            <Toggle
-              label="Enable Background Polling"
-              checked={autoRefresh}
-              onChange={setAutoRefresh}
-            />
-            <div className={styles.configItem}>
-              <label htmlFor="refresh-interval" className={styles.configLabel}>
-                Refresh Interval:
-              </label>
-              <select
-                id="refresh-interval"
-                value={refreshIntervalSeconds}
-                onChange={(e) => setRefreshIntervalSeconds(Number(e.target.value))}
-                className={styles.intervalSelect}
+          <div className={styles.configItem}>
+            <span className={styles.configLabel}>Swagger Documentation:</span>
+            <span className={styles.configValue}>
+              <a
+                href="/swagger/index.html"
+                target="_blank"
+                rel="noreferrer"
+                className={styles.swaggerLink}
               >
-                <option value={5}>5 seconds</option>
-                <option value={10}>10 seconds</option>
-                <option value={30}>30 seconds</option>
-                <option value={60}>60 seconds</option>
-              </select>
-            </div>
+                [ Open /swagger/index.html &gt; ]
+              </a>
+            </span>
           </div>
-        </AsciiCard>
-      </div>
+          <div className={styles.configItem}>
+            <span className={styles.configLabel}>Backend Status:</span>
+            <span className={styles.configValue}>
+              <Badge variant={health?.status === 'up' ? 'green' : 'red'}>
+                {health?.status === 'up' ? 'ONLINE (200 OK)' : 'OFFLINE'}
+              </Badge>
+              <button
+                type="button"
+                onClick={handlePing}
+                className={styles.pingBtn}
+              >
+                [ Ping ]
+              </button>
+            </span>
+          </div>
+        </div>
+      </AsciiCard>
     </div>
   )
 }

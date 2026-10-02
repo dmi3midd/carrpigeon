@@ -66,11 +66,6 @@
   padding: 2px 6px;
 }
 
-.twoCol {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
-}
 
 .configList {
   display: flex;
@@ -111,11 +106,4 @@
   font-size: 11px;
   padding: 1px 6px;
 }
-
-.intervalSelect {
-  width: auto;
-  font-size: 12px;
-}
-
-
 

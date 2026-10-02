@@ -3,7 +3,6 @@ import styles from './TerminalFrame.module.css'
 import { useUiStore, type NavTab } from '../../stores/useUiStore'
 import { useSettingsStore, type TerminalTheme } from '../../stores/useSettingsStore'
 import { useHealthStore } from '../../stores/useHealthStore'
-import { Badge } from '../Badge/Badge'
 import { ToastContainer } from '../Toast/ToastContainer'
 
 interface TerminalFrameProps {
@@ -13,7 +12,7 @@ interface TerminalFrameProps {
 export const TerminalFrame: React.FC<TerminalFrameProps> = ({ children }) => {
   const { activeTab, setActiveTab } = useUiStore()
   const { theme, setTheme } = useSettingsStore()
-  const { data: health, error: healthError, fetchHealth } = useHealthStore()
+  const { data: health, fetchHealth } = useHealthStore()
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString())
 
   useEffect(() => {
@@ -39,8 +38,6 @@ export const TerminalFrame: React.FC<TerminalFrameProps> = ({ children }) => {
     { key: 'settings', label: 'Settings' },
   ]
 
-  const isOnline = health?.status === 'up' && !healthError
-
   return (
     <div className={styles.terminalWindow}>
       {/* Titlebar */}
@@ -52,15 +49,12 @@ export const TerminalFrame: React.FC<TerminalFrameProps> = ({ children }) => {
         </div>
 
         <div className={styles.windowTitle}>
-          <span className={styles.cliPrompt}>carrpigeon-cli</span>
+          <span className={styles.cliPrompt}>carrpigeon-webui</span>
           <span className={styles.separator}>—</span>
           <span className={styles.path}>~/carrpigeon/{activeTab}</span>
         </div>
 
         <div className={styles.statusGroup}>
-          <Badge variant={isOnline ? 'green' : 'red'}>
-            {isOnline ? 'SYS: ONLINE' : 'SYS: OFFLINE'}
-          </Badge>
           <select
             value={theme}
             onChange={(e) => setTheme(e.target.value as TerminalTheme)}
