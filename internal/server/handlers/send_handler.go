@@ -30,7 +30,7 @@ func (h *SendHandler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 type SendSingleRequest struct {
-	To      string `json:"to" validate:"required,email" example:"receiver@example.com"`
+	To      string `json:"to" validate:"required,len=20" example:"a790g02f8n90184b23qq"`
 	Subject string `json:"subject" validate:"required,max=256" example:"Welcome to Carrpigeon!"`
 	Body    string `json:"body" validate:"required,max=2048" example:"Hello, this is a plain text message."`
 }
@@ -63,7 +63,7 @@ func (h *SendHandler) SendSingleHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 type SendSingleWithTemplateRequest struct {
-	To         string      `json:"to" validate:"required,email" example:"receiver@example.com"`
+	To         string      `json:"to" validate:"required,len=20" example:"a790g02f8n90184b23qq"`
 	Subject    string      `json:"subject" validate:"required,max=256" example:"Your invoice"`
 	TemplateID string      `json:"template_id" validate:"required,len=20" example:"c790g02f8n90184b23qg"`
 	Data       interface{} `json:"data" validate:"required"`

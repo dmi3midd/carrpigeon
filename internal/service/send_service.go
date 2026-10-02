@@ -100,7 +100,7 @@ func buildTemplateData(r *domain.Receiver, data any) any {
 func (s *sendService) SendSingle(ctx context.Context, to, subject, body string) error {
 	op := "SendService.SendSingle"
 
-	r, err := s.receiverRepo.GetByEmail(ctx, to)
+	r, err := s.receiverRepo.GetById(ctx, to)
 	if err != nil {
 		if errors.Is(err, repository.ErrNoReceiver) {
 			return fmt.Errorf("%s: %w", op, ErrReceiverNotFound)
@@ -133,7 +133,7 @@ func (s *sendService) SendSingle(ctx context.Context, to, subject, body string) 
 func (s *sendService) SendSingleWithTemplate(ctx context.Context, to, subject, templateId string, data interface{}) error {
 	op := "SendService.SendSingleWithTemplate"
 
-	r, err := s.receiverRepo.GetByEmail(ctx, to)
+	r, err := s.receiverRepo.GetById(ctx, to)
 	if err != nil {
 		if errors.Is(err, repository.ErrNoReceiver) {
 			return fmt.Errorf("%s: %w", op, ErrReceiverNotFound)
